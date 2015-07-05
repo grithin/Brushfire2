@@ -334,6 +334,14 @@ class ModelApi{
 							and '' inputs are set to null on nullable fields
 						) empty text fields should be handle as nulls
 				*/
+				//ignore special fields
+				if(
+					($field == 'created' || $field == 'updated') &&
+					($info['type'] == 'datetime' || $info['type'] == 'date')
+				){
+					continue;
+				}
+				
 				$validaters[$field][] = '!v.filled';
 			}
 		}
@@ -348,7 +356,14 @@ class ModelApi{
 	function generalFieldValidaters($fullName,$info){
 		$field = explode('.',$fullName)[1];
 		$validaters = [];
-		//create validation and deal with special columns
+		
+		//speical handling for 'created' and 'updated'
+		if(
+			($field == 'created' || $field == 'updated') &&
+			($info['type'] == 'datetime' || $info['type'] == 'date')
+		){
+			return [];
+		}
 		
 		$validaters[] = 'f.toString';
 		if(!$info['nullable'] && !$info['autoIncrement']){
