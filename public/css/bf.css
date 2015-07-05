@@ -1,0 +1,245 @@
+/*+	reset {*/
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+tt, var,
+dl, dt, dd, 
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+/*+ }*/
+
+
+/*+	system messaaages {*/
+._errorHighlight, ._error{
+	background-color:rgba(255,235,235,.9) !important;
+	color:#BB0606 !important;
+}
+._successHighlight, ._success{
+	background-color:rgba(235,255,235,.9) !important;
+	color:#006D00 !important;
+}
+._noticeHighlight, ._notice{
+	background-color:rgba(235,235,255,.9) !important;
+	color:#0909B4 !important;
+}
+._warningHighlight, ._warning{
+	background-color:rgba(255,251,240,.9) !important;
+	color:#7F6D0F !important;
+}
+
+._message{
+	border-style: solid;
+	border-width: 1px;
+	padding:5px 20px 5px 10px;
+	margin:5px;
+	overflow:auto;
+}
+._messageContainer ._closeButton{
+	float:right;
+	padding-left:10px;
+	cursor:pointer;
+	background-image: url("/brushfire/img/closeButton.png");
+	background-position: right center;
+	background-repeat: no-repeat;
+	background-size: 16px 16px;
+	width:16px;
+	height:16px;
+	opacity:0.6;
+	filter:alpha(opacity=60); /* For IE8 and earlier */
+}
+/*+	}*/
+
+/**++ utilities { */
+.spacer,.spacer-2,.spacer-3{
+	clear:both;
+	height:1rem;
+}
+.spacer-2{
+	height:2rem;
+}
+.spacer-3{
+	height:3rem;
+}
+.ln{
+	cursor:pointer;
+	color:#0078A0;
+}
+/**++ }*/
+
+
+/*+	standard table and table sort{*/
+
+table.standard{
+	margin-top: 5px;
+	margin-bottom: 5px;
+	border-collapse: collapse;
+	text-align: left;
+}
+table.standard th{
+	padding: 8px 8px;
+}
+table.standard > tbody > tr > td{
+	padding: 6px 8px;
+}
+table.standard > tbody > tr:nth-child(2n){
+	background-color:rgba(240,240,240,.1);
+}
+
+
+.sortContainer *[data-field]{
+	background-image: url("/brushfire/img/style/sortBoth.png");
+	background-position: right center;
+	background-repeat: no-repeat;
+	cursor: pointer;
+}
+
+
+.sortContainer .sortAsc {
+    opacity:.9;
+    background-image: url("/brushfire/img/style/sortAsc.png");
+}
+.sortContainer .sortDesc{
+    opacity:.9;
+    background-image: url("/brushfire/img/style/sortDesc.png");
+}
+/*+	}*/
+
+
+/*+	paginater{*/
+.paginater{
+	margin:10px 5px 2px 5px;
+	height:30px;
+	padding-left:10px;
+	padding-right:10px;
+	vertical-align:middle;
+}
+
+.paginater .first, .paginater .prev, .paginater .pg, .paginater .next, .paginater .last, .paginater .range{
+	float:left;
+}
+.paginater .first, .paginater .prev, .paginater .pg, .paginater .next, .paginater .last, .paginater .range{
+	float:left;
+}
+.paginater .direct, .paginater .go{
+	float:right;
+}
+.paginater .prev.clk{
+	margin-right:10px;
+}
+.paginater .next.clk{
+	margin-left:10px;
+}
+.paginater .clk{
+	border-radius: 4px 4px 4px 4px;
+	background-color:#eee;
+	padding:0px 5px 0px 5px;
+	margin-left:2px;
+    height: 22px;
+    line-height:22px;
+    cursor:pointer;
+}
+.paginater .clk.pg.current{
+	background-color:#ccf;
+}
+
+.paginater .clk:hover{
+	background-color:#ddf;
+}
+.paginater .clk:active{
+	background-color:#99f;
+	color:#fff;
+}
+
+.paginater .clk.disabled{
+	background-color:#ddd;
+	color:#a9a9a9;
+	cursor:default;
+}
+.paginater .clk.disabled:hover{
+	background-color:#ddd;
+	color:#a9a9a9;
+}
+.paginater .clk.disabled:active{
+	background-color:#ddd;
+	color:#a9a9a9;
+}
+
+.paginater .range{
+	padding:0px 5px 0px 5px;
+	height: 22px;
+    line-height:22px;
+	padding-left:20px;
+}
+.paginater .range span{
+	vertical-align:middle;
+	display:inline;
+}
+.paginater .direct input{
+	width:30px;
+}
+.paginater .range .current,.paginater .range .total{
+	font-weight:bold;
+}
+body input[name="directPg"]{
+	padding:0px;
+	margin:0px;
+	line-height:1;
+}
+/*+	}*/
+/*+	Tool tip {*/
+.tooltipMarker{
+	padding-left:8px;
+	position:relative;
+	top:3px;
+	cursor:pointer;
+	color:blue;
+	display:inline-block;
+	vertical-align:top;
+	font-size:7pt;
+}
+.tooltip{
+	position:absolute;
+	background:#DDF3FA;
+	padding:10px;
+	border:3px solid rgba(27,133,165,0.2);
+	max-width:500px;
+	color:black;
+	z-index:1000;
+	display:none;
+	border-radius:10px 10px 10px 10px;
+	opacity:0.9;
+}
+/*+	}*/
+

@@ -1,0 +1,13 @@
+{
+	"config": {
+		"vendor-dir": "vendor"
+	},
+	"require": {
+		"php": ">=5.3.3",
+		"phpmailer/phpmailer": "dev-master",
+		"ext-mcrypt" : "*",
+		"ext-curl": "*",
+		"ext-memcached" : "*",
+		"ext-json": "*"
+	}
+}
