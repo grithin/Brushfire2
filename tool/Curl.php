@@ -1,12 +1,18 @@
 <?
 //Debug with #$curl->options[CURLOPT_VERBOSE] = true;
+/**
+Example use
 
-///Handling curl functionality
-/*
-Originaly from
-	2008 Sean Huber - shuber@huberry.com (https://github.com/theshock/curl), 
-	Fabian Grassl
-but I changed a lot
+//$post is  either an array or a string
+$post = ['bob'=>'sue','sue'=>'monkey'];
+$post = '<?xml version="1.0"?>...';
+
+$curl = new Curl;
+$response = $curl->post('https://post.craigslist.org/bulk-rss/validate',$post);
+
+echo $response->body;
+print_r($response->headers);
+
 */
 
 class Curl{

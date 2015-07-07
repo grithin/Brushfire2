@@ -200,14 +200,26 @@ bf.obj.setValue = function(name,value,obj){
 	current = obj
 	for(var i = 0; i < nameParts.length - 1; i++){
 		if(!current[nameParts[i]]){
-			current[nameParts[i]] = {}
-		}
+			current[nameParts[i]] = {}	}
 		//since objs are moved by reference, this obj attribute of parent obj still points to parent attribute obj
-		current = current[nameParts[i]]
-	}
-	current[nameParts[nameParts.length - 1]] = value
-}
+		current = current[nameParts[i]]	}
+	current[nameParts[nameParts.length - 1]] = value	}
 
+/**
+@param	target	object to merge into
+variable number of additional parameters are objects to merge into target (over target properties)
+@note, b/c this is shallow, does not make a copy of any properties that are objectd
+@return	target object
+*/
+bf.obj.shallowMerge = function(target){
+	var key
+	for(var i = 0; i < arguments.length; i++){
+		for(key in arguments[i]){
+			target[key] = arguments[i][key]
+		}
+	}
+	return target
+}
 
 //+	url related functions {
 
@@ -539,7 +551,7 @@ bf.getModelField = function(name,modelScope){
 	}
 	var field = bf.model[parsedName.scope].columns[parsedName.relative] || {}
 	field = JSON.parse(JSON.stringify(field))
-	field.name = Object.assign(parsedName, field.name || {});//copy existing field.name attributes over parsedName and put into field.name
+	field.name = bf.obj.shallowMerge(parsedName, field.name || {});//copy existing field.name attributes over parsedName and put into field.name
 
 	//handle default special naming for out of scope special fields
 	if(field.name.scope != modelScope){
