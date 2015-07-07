@@ -12,6 +12,7 @@ Cache::delete('view.aliases');
 $cached = Cache::get('_autoloadCached');
 if($cached){
 	foreach($cached as $class){
+		echo 'Clearing autoload class: '.$class."\n";
 		Cache::delete('_autoload.'.$class);
 	}
 	Cache::delete('_autoloadCached');

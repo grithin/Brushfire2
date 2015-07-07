@@ -28,41 +28,38 @@ class ModelApi{
 		}
 		
 		
-		if(!$in['type'] || $in['type']=='readOne'){
+		
+		switch($in['type']){
+			case 'readOne':
+				\View::$json['value'] = self::readOne($table,$in);
+			break;
+			case 'readMany':
+				\View::$json['value'] = self::readMany($table,$in);
+			break;
+			case 'createOne':
+				$insert = self::createOne($table,$in);
+				\View::$json['value'] =  $insert['id'];
+			break;
+			case 'updateOne':
+				\View::$json['value'] = (bool)self::updateOne($table,$in);
+			break;
+			case 'createMany':
+				$ids = self::createMany($table,$in);
+				\View::$json['value'] =  $ids;
+			break;
+			case 'updateMany':
+				\View::$json['value'] = self::updateMany($table,$in);
+			break;
+			case 'deleteOne':
+				\View::$json['value'] = self::delete($table,$in);
+			break;
+			case 'deleteMany':
+				\View::$json['value'] = self::deleteMany($table,$in);
+			break;
 			
-		}else{
-			switch($in['type']){
-				case 'readMany':
-					\View::$json['value'] = self::readOne($table,$in);
-				break;
-				case 'readMany':
-					\View::$json['value'] = self::readMany($table,$in);
-				break;
-				case 'createOne':
-					$insert = self::createOne($table,$in);
-					\View::$json['value'] =  $insert['id'];
-				break;
-				case 'updateOne':
-					\View::$json['value'] = (bool)self::updateOne($table,$in);
-				break;
-				case 'createMany':
-					$ids = self::createMany($table,$in);
-					\View::$json['value'] =  $ids;
-				break;
-				case 'updateMany':
-					\View::$json['value'] = self::updateMany($table,$in);
-				break;
-				case 'deleteOne':
-					\View::$json['value'] = self::delete($table,$in);
-				break;
-				case 'deleteMany':
-					\View::$json['value'] = self::deleteMany($table,$in);
-				break;
-				
-				default:
-					\Control::error('No matched _type');
-				break;
-			}
+			default:
+				\Control::error('No matched _type');
+			break;
 		}
 		\View::endStdJson();
 	}
