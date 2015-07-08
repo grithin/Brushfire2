@@ -9,5 +9,32 @@ A highly scalable, heavily opinionated LAMP framework and tool library.  Not for
 *	Both the back end and front end should know about and react to the model structure and data
 *	The back end should choose what information about the model to provide and should provide an API for accessing and operating on the model data
 
+
+### Setup
+```
+git clone https://github.com/grithin/Brushfire2.git brushfire2
+cd brushfire2
+php install.php /var/www/brushfire.sample
+```
+This assumes /var/www/brushfire.sample can be a valid directory
+
+Once this is done, point an apache virtual host to /var/www/brushfire.sample/public/
+
+
+### Instance Layout
+*	standard
+	*	control/
+	*	tool/
+	*	local/
+	*	template/
+	*	public/
+		*	index.php (copy public/index.php from framework)
+	*	apt/
+		*	config.php (see and copy project.config.template.php)
+		*	other files that aren't versioned
+	*	resource/
+		*	non web-framework resources that are	versioned.	Like cli php scripts, or non-php scripts.
+
+
 ### History
 Brushfire 2 represents a paradigm shift from Brushfire 1 (v10).  That shift includes moving away from any UI related functionalities in the back end in favor of providing the front end with more data through JSON; use of a central model instead of local tools; forcing the use of the single Control paradigm; forcing use of caching.

@@ -50,4 +50,4 @@ Should define a $rules array with each conformating to
 
 /** @file */
 //load index control on paths ending with directory
-$rules[] = ['/$','/index','regex'];
+$rules[] = ['/$','/brushfire/index','regex'];
