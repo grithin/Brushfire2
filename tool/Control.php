@@ -120,10 +120,12 @@ class Control{
 		//load db if configured
 		if($_ENV['database']['default']){
 			self::$db = Db::init($_ENV['projectName'],$_ENV['database']['default']);
-			//load model
-			require_once $_ENV['systemFolder'].'tool/ModelTrait.php';
-			require_once $_ENV['projectFolder'].'tool/Model.php';
-			self::$model = new Model(['forceRemake'=>$_ENV['forceRemakeModel'],'db'=>self::$db]);
+			if(!$_ENV['database.noModel']){
+				//load model
+				require_once $_ENV['systemFolder'].'tool/ModelTrait.php';
+				require_once $_ENV['projectFolder'].'tool/Model.php';
+				self::$model = new Model(['forceRemake'=>$_ENV['forceRemakeModel'],'db'=>self::$db]);
+			}
 		}
 	}
 	/**

@@ -28,8 +28,89 @@
 <div id="typeContent" class="row">
 	
 </div>
+<div id="pagingControl"></div>
+<style>
+	.items .item{
+		overflow:hidden;
+		border:1px solid black;
+		margin-bottom:3px;
+	}
+	.items .item .field{
+		float:left;
+		border:1px solid rgba(0,0,0,0.3);
+	}
+	.items .item .field .key{
+		display:inline-block;
+		padding-left:5px;
+		padding-right:5px;
+		color:rgb(0,0,100);
+	}
+	.items .item .field .value{
+		display:inline-block;
+		padding-left:5px;
+		padding-right:5px;
+		color:rgb(0,100,0);
+	}
+	
+	
+</style>
 
 <script>
+	function multiItemView(json, fieldHandler,keyHandlers){
+		if(keyHandlers){
+			var itemHandler = function(item){
+				itemEle = $('<div class="item"></div>')
+				for(var key in item){
+					value = item[key]
+					if(keyHandlers[key]){
+						itemEle.append(keyHandlers[key](value, key, fieldHandler))
+					}else{
+						itemEle.append(fieldHandler(value, key))
+					}
+				}
+				return itemEle;
+			}
+		}else{
+			var itemHandler = function(item){
+				itemEle = $('<div class="item"></div>')
+				for(var key in item){
+					value = item[key]
+					itemEle.append(fieldHandler(value, key))
+				}
+				return itemEle;
+			}
+		}
+		
+		var itemsEle, itemEle;
+		itemsEle = $('<div class="items"></div>')
+		for(var i in json){
+			itemsEle.append(itemHandler(json[i]))
+		}
+		return itemsEle
+	}
+	shortFieldHandler = function(length){
+		length = length || 100
+		return function(value, key, format){
+			if(value && value.length > length){
+				value = value.substr(0,length)+'...'
+			}
+			return fieldHandler(value, key, format)
+		}
+	}
+	fieldHandler = function(value, key, format){
+		format = format || 'text'
+		var ele = $('<div class="field"></div>')
+		ele.append($('<div class="key"></div>').text(key))
+		if(format == 'text'){
+			ele.append($('<div class="value"></div>').text(value))
+		}else{
+			ele.append($('<div class="value"></div>').html(value))
+		}
+		return ele
+	}
+
+	
+	
 	var table = bf.url.requestVar('table')
 	table = table || 'any'
 	var type = bf.url.requestVar('type')
@@ -82,8 +163,26 @@
 			return
 		}else if(type == 'readMany'){
 			var loadOptions = {type:'readMany',where:where,per:20,page:0}
-			bf.loadData(table,loadOptions).then(function(items){
-				content.append($('<pre></pre>').text(JSON.stringify(items,null,4)))	})
+			bf.loadData(table,loadOptions).then(function(json){
+				keyHandlers = {id:function(value,key,callback){
+						value = '<span class="ln" data-id="'+value+'">'+value+'</span>'
+						return callback(value,key,'html')
+					},name:function(value,key,callback){
+						var ele = callback(value,key,'html')
+						ele.css({display:'block',float:'none'})
+						return ele	}	}
+				content.append(multiItemView(json.rows,shortFieldHandler(),keyHandlers))
+				content.delegate('[data-id]','click',function(){
+					var id = $(this).attr('data-id')
+					$('#where [name="where"]').val('{"id":'+id+'}')
+					updateType('updateOne')	})
+				
+				json.info.url = '/model/'+table
+				json.info.handlers = {dataHandler: function(rows){ 
+					content.empty().append(multiItemView(rows,shortFieldHandler(),keyHandlers)); }}
+				bf.view.ps.start(json.info)
+				
+					}).catch(bf.logError)
 		}else if(type == 'readOne'){
 			var loadOptions = {type:'readOne',where:where}
 			bf.loadData(table,loadOptions).then(function(item){

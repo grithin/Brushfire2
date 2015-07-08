@@ -696,6 +696,59 @@ bf.view.redirect = function(loc,windowName,type){
 
 //+	pageSorting {
 bf.view.ps = {}
+/**
+ex
+	have a 
+		<div id="pagingControl"></div>
+	on the page
+	or define the pagingControl key
+	
+	then do
+		bf.view.ps.start({
+			url:'dataUrl',
+			handlers.dataHandler: function(rows){ console.log(rows); }
+			})
+	
+	url json post should respond with json result of View::$json['value'] = SortPage::page(); View::endStdJson();
+*/
+
+
+///set current object defaults, run getSortPage with page 1
+bf.view.ps.start = function(current){
+	defaults = {url:window.location,pagingControl:$('#pagingControl'),page:0,pages:0,sorts:''}
+	for(var key in defaults){
+		if(typeof(current[key]) == 'undefined'){
+			current[key] = defaults[key]	}	}
+	bf.view.ps.makePageControl(current)
+	bf.view.ps.get(current,{page:1})	}
+
+/**
+@param	current	{
+	page:x,
+	pages:x
+	sort:x,
+	url:x
+	handlers:x	}
+*/
+bf.view.ps.get = function(current,update){
+	var changed = false;
+	if(update.page && current.page != update.page){
+		current.page = update.page
+		changed = true	}
+	if(update.sort && current.sort != update.sort){
+		current.sort = update.sort
+		changed = true	}
+	if(changed){
+		$.ajax({
+			url:current.url,
+			contentType:'application/json',
+			data:JSON.stringify(current),
+			dataType:'json',
+			method:'POST',
+			success:function(json){
+				current.pages = json.value.info.pages
+				bf.view.ps.apply(json.value.rows,current)	}	})	}	}
+
 ///account for defaults, and split order and field
 bf.view.ps.parseSort = function(sort){
 	var order = sort.substring(0,1)
@@ -738,46 +791,7 @@ bf.view.ps.changeSort = function(newField){
 			return	}	}
 	bf.sorts = ['+'+newField]	}
 
-///reloads page with new sort
-bf.view.ps.reload = function(){
-	var url = bf.url.append('_sort',bf.sorts.join(','),null,true)
-	bf.view.redirect(url)	}
-///set current object defaults, run getSortPage with page 1
-bf.view.ps.start = function(current){
-	defaults = {url:window.location,pagingControl:$('#pagingControl'),page:0,pages:0,sorts:''}
-	for(var key in defaults){
-		if(typeof(current[key]) == 'undefined'){
-			current[key] = defaults[key]	}	}
-	bf.view.ps.get(current,{page:1})	}
 
-/**
-@param	current	{
-	page:x,
-	pages:x
-	sort:x,
-	url:x
-	handlers:x	}
-*/
-bf.view.ps.get = function(current,update){
-	var changed = false;
-	if(update.page && current.page != update.page){
-		current.page = update.page
-		changed = true	}
-	if(update.sort && current.sort != update.sort){
-		current.sort = update.sort
-		changed = true	}
-	if(changed){
-		$.ajax({
-			url:current.url,
-			contentType:'application/json',
-			data:JSON.stringify({_page:current.page,_sort:current.sort}),
-			dataType:'json',
-			method:'POST',
-			success:function(json){
-				current.pages = json.sortPage.info.pages
-				bf.view.ps.apply(json.sortPage.rows,current)	}	})	}	}
-
-//+		paging{
 bf.view.ps.apply = function(data, current){
 	current.handlers.dataHandler(data,current)
 	bf.view.ps.makePageControl(current)	}
@@ -862,7 +876,7 @@ bf.view.ps.makePageControl = function(current){
 		if (e.which == 13) {
 			e.preventDefault();
 			$('.go',paginaterDiv).click();	}	});	}
-//+		}
+
 //+	}
 
 //+	System Messages {

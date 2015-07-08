@@ -422,4 +422,25 @@ class Tool{
 		}
 		return true;
 	}
+	///will encode to utf8 on failing for bad encoding
+	static function json_encode($x){
+		$json = json_encode($x);
+		if($json === false){
+			if(json_last_error() == JSON_ERROR_UTF8){
+				self::utf8_encode($x);
+				$json = json_encode($x);	}	}
+		if(json_last_error() != JSON_ERROR_NONE){
+			\Debug::toss('JSON encode error: '.json_last_error());	}
+		
+		return $json;
+	}
+	///utf encode variably deep array
+	static function &utf8_encode(&$x){
+		if(!is_array($x)){
+			$x = utf8_encode($x);
+		}else{
+			foreach($x as $k=>&$v){
+				self::utf8_encode($v);	}	}
+		return $x;
+	}
 }

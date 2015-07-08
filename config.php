@@ -66,6 +66,7 @@ $_ENV['displayErrors'] = true;
 ///regex match on file for stack parts to exclude from error stack output
 $_ENV['errorStackExclude'] = [];#['@^system:@'];
 
+
 //+	}
 //+	Session config {
 ///date in the past after which inactive sessions should be considered expired
@@ -89,9 +90,10 @@ ini_set('session.gc_divisor', 100);
 
 //+	Caching {
 ///connection array
-$_ENV['cache.default'] = ['127.0.0.1','11211'];
-///prefix for keys
-$_ENV['cachePrefix'] = $_ENV['httpHost'];
+#$_ENV['cache.default'] = ['type'=>'memcache','connection'=>['127.0.0.1','11211'],'prefix'=>$_ENV['httpHost']];
+$_ENV['cache.default'] = ['type'=>'redis','connection'=>['127.0.0.1',6379, 1, NULL, 100],'prefix'=>$_ENV['httpHost']];
+///db of cache to connect to, if any
+//$_ENV['cache.db']
 //+ }
 //+	Encryption config {
 ///the cipher to use for the framework encyption class

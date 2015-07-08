@@ -10,10 +10,27 @@ Underlying cache functions
 */
 
 class Cache{
-	use OCSDLL{	OCSDLL::load as OCSDLL_load; }
+	use OverClassSingleton{	OverClassSingleton::load as OverClassSingleton_load;}
 
-	static $types = array('memcache'=>'MemCacher','apc'=>'ApCacher','file'=>'FileCacher');
+	static $types = array('redis'=>'\cache\Redis','memcache'=>'\cache\Memcached');
 	public $prefix;///< used per project to avoid project collisions
+	public $connectionInfo;
+	/**
+	@param	1	Class Instance Singleton Name
+	@param	2	default type
+	@param	3	cache connection config
+	@param	4	cache prefix
+	*/
+	static function start(){
+		$args = func_get_args();
+		if($args[1] == 'redis'){
+			require_once $_ENV['systemFolder'].'tool/cache/Redis.php';
+		}elseif($args[1] == 'memcache'){
+			require_once $_ENV['systemFolder'].'tool/cache/Memcached.php';
+		}
+		return call_user_func_array(['self','init'],func_get_args());
+	}
+	
 	/**
 	@param	type	see static types variable
 	@param	connectionInfo	array:
@@ -23,7 +40,7 @@ class Cache{
 	]
 	*/
 	function load(){
-		call_user_func_array([$this,'OCSDLL_load'],func_get_args());
+		call_user_func_array([$this,'OverClassSingleton_load'],func_get_args());
 		if(!$this->check()){
 			Debug::toss('Failed to get check cache',__CLASS__.'Exception');
 		}
@@ -113,68 +130,4 @@ class Cache{
 		$this->local[$key] = $value;
 		$this->under->set($key,$value,$expiry);
 	}
-}
-class MemCacher extends Cache{
-	public $_success = true;
-	function __construct($connectionInfo=null,$options=null){
-		$this->prefix = $options['prefix'];
-		$this->connectionInfo = $connectionInfo;
-		if(!class_exists('Memcached') || !$connectionInfo){
-			$this->_success = false;
-		}
-	}
-	
-	function load(){
-		$this->under = $this->cacher = new Memcached;
-		$this->under->setOption(\Memcached::OPT_BINARY_PROTOCOL, true);
-		if(!is_array(current($this->connectionInfo))){
-			$this->connectionInfo = array($this->connectionInfo);
-		}
-		foreach($this->connectionInfo as $v){
-			if(!$this->cacher->addserver($v[0],$v[1],$v[2])){
-				Debug::toss('Failed to add cacher "'.$name.'"',__CLASS__.'Exception');
-			}
-		}
-	}
-	function touch(){
-		$args = func_get_args();
-		$args[0] = $this->prefix.$args[0];
-		return call_user_func_array([$this->under,'touch'],$args);
-	}
-	function delete(){
-		$args = func_get_args();
-		$args[0] = $this->prefix.$args[0];
-		return call_user_func_array([$this->under,'delete'],$args);
-	}
-	function get(){
-		$args = func_get_args();
-		$args[0] = $this->prefix.$args[0];
-		return call_user_func_array([$this->under,'get'],$args);
-	}
-	function set(){
-		$args = func_get_args();
-		$args[0] = $this->prefix.$args[0];
-		return call_user_func_array([$this->under,'set'],$args);
-	}
-	
-	public $casToken;
-	function lastCasToken(){
-		return $this->casToken;
-	}
-	///@note casToken not set if key not in cache
-	function casGet($name){
-		$got = $this->under->get($name,null,$this->casToken);
-	}
-	function getAndCasToken($name){
-		$casToken = 0.0;
-		$got = $this->under->get($name,null,$casToken);
-		if($casToken == 0.0){
-			$this->under->set($name,0);
-			$got = $this->under->get($name,null,$casToken);
-		}
-		return [$got,$casToken];
-	}
-}
-class ApCacher extends Cache{
-	public $_success = false;
 }

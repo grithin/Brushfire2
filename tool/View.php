@@ -495,7 +495,7 @@ array(
 		self::$json['timezone'] = \User::timezone();
 		
 		Hook::run('stdJson');
-		return json_encode(self::$json);
+		return Tool::json_encode(self::$json);
 	}
 	///end the script with stdJson
 	static protected function endStdJson(){
@@ -513,7 +513,7 @@ array(
 		Hook::run('preHTTPMessageBody');
 		header('Content-type: application/json');
 		if($encode){
-			echo json_encode($content);
+			echo Tool::json_encode($content);
 		}else{
 			echo $content;
 		}

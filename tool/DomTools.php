@@ -1,5 +1,5 @@
 <?
-class domTools{
+class DomTools{
 	///takes a node and makes a dom document out of it
 	static function isolateNode($node){
 		$dom = new DOMDocument;

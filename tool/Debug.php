@@ -2,9 +2,6 @@
 /// used for basic debuging
 /** For people other than me, things don't always go perfectly.  As such, this class is exclusively for you.  Measure things.  Find new and unexpected features.  Explore the error messages*/
 class Debug{
-	/// measurements on time and memory
-	static $measures;
-	static $out;
 	///provided for convenience to place various user debugging related values
 	static $x;
 	///allows for the decision to throw or trigger error based on the config
@@ -20,7 +17,7 @@ class Debug{
 	///throws variable class exception
 	static function toss($message=null,$type='',$code=0,$previous=null){
 		if($type){
-			if(!class_exists($type,false) && !Autoload::loaded($type)){
+			if(!class_exists($type,false) && (!class_exists('Autoload',false) || !Autoload::loaded($type))){
 				eval('class '.$type.' extends Exception{}');
 			}
 		}else{
@@ -28,55 +25,61 @@ class Debug{
 		}
 		throw new $type($message,$code,$previous);
 	}
-	///Take a measure
+	/// benchments on time and memory
+	static $benchGroups;
+	///Take a bench
 	/** Allows you to time things and get memory usage
-	@param	name	the name of the measure to be printed out with results.  To get the timing between events, the name should be the same.
+	@param	name	the name of the bench to be printed out with results.  To get the timing between events, the name should be the same.
+	Ex
+		Debug::bench();
+		sleep(1);
+		Debug::bench();
+		sleep(1);
+		Debug::bench();
+		sleep(1);
+		Debug::quit(Debug::benchDone());
 	*/
-	static function measure($name='std'){
-		$next = count(self::$measures[$name]);
-		self::$measures[$name][$next]['time'] = microtime(true);
-		self::$measures[$name][$next]['mem'] = memory_get_usage();
-		self::$measures[$name][$next]['peakMem'] = memory_get_peak_usage();
+	static function bench($name='std'){
+		$next = count(self::$benchGroups[$name]);
+		self::$benchGroups[$name][$next]['time'] = microtime(true);
+		self::$benchGroups[$name][$next]['mem'] = memory_get_usage();
+		self::$benchGroups[$name][$next]['mem.max'] = memory_get_peak_usage();
 	}
-	///get the measurement results (expects on/off on/off intervals)
+	///calls bench and prints results
 	/**
-	@param	type	the way in which to print out results if any.  options are "html" and "console"
 	@return	returns an array with results
 	*/
-	static function measureResults($summary=false){
-		foreach(self::$measures as $name=>$measure){
-			$totalTime = 0;
-			if($summary){
-				while(($instance = current($measure)) && next($measure)){
-					$nextInstance = current($measure);
-					if($nextInstance){
-						$out[$name]['timeChange'] += $nextInstance['time'] - $instance['time'];
-						$out[$name]['memoryTotalChange'] += $nextInstance['mem'] - $instance['mem'];
-						$peakMemChange = $nextInstance['peakMem'] - $instance['peakMem'];
-						if($peakMemChange > $out[$name]['peakMemoryChange']){
-							$out[$name]['peakMemoryChange'] = $peakMemChange;
-						}
-						if($out[$name]['peakMemoryLevel'] < $instance['peakMem']){
-							$out[$name]['peakMemoryLevel'] = $instance['peakMem'];
-						}
-					}
-					next($measure);
+	static function benchDone($groups=null){
+		if(!$names){
+			$names = array_keys(self::$benchGroups);
+		}
+		$names = (array)$names;
+		
+		//close any open benchs unset static benchGroups
+		foreach($names as $name){
+			self::bench($name);
+			$benchGroups[$name] = self::$benchGroups[$name];
+			unset(self::$benchGroups[$name]);
+		}
+		$out = [];
+		foreach($benchGroups as $name=>$bench){
+			$out[$name] = ['diff'=>[]];
+			$current = current($bench);
+			$mem['min'] = $current['mem'];
+			$mem['max'] = $current['mem.max'];
+			$time = 0;
+			while($next = next($bench)){
+				$outItem = &$out[$name]['diff'][count($out[$name]['diff'])];
+				$time += $outItem['time'] = $next['time'] - $current['time'];
+				$outItem['mem'] = $next['mem'] - $current['mem'];
+				$outItem['mem.max'] = $next['mem.max'] - $current['mem.max'];
+				if($current['mem.max'] > $mem['max']){
+					$mem['max'] = $current['mem.max'];
 				}
-			}else{
-				while(($instance = current($measure)) && next($measure)){
-					$nextInstance = current($measure);
-					if($nextInstance){
-						$currentCount = count($out[$name]);
-						$totalTime += $nextInstance['time'] - $instance['time'];
-						$out[$name][$currentCount]['timeChange'] = $nextInstance['time'] - $instance['time'];
-						$out[$name][$currentCount]['memoryChange'] = $nextInstance['mem'] - $instance['mem'];
-						$out[$name][$currentCount]['peakMemoryChange'] = $nextInstance['peakMem'] - $instance['peakMem'];
-						$out[$name][$currentCount]['peakMemoryLevel'] = $instance['peakMem'];
-					}
-					next($measure);
-				}
-				$out[$name]['total']['time'] = $totalTime;
+				$current = $next;
 			}
+			$out[$name]['total']['mem'] = $mem;
+			$out[$name]['total']['time'] = $time;
 		}
 		return $out;
 	}
@@ -252,11 +255,12 @@ class Debug{
 		self::sendout($content);
 		exit;
 	}
+	static $out;
+	static $usleepOut = 0;///<usleep each out call
 	///print a variable with file and line context, along with count
 	/**
 	@param	var	any type of var that print_r prints
 	*/
-	static $usleepOut = 0;///<usleep each out call
 	static function out(){
 		self::$out['i']++;
 		$trace = debug_backtrace();

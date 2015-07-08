@@ -141,7 +141,7 @@ The pattern: Pass in type to over-class, and henceforth over-class uses instance
 */
 trait OverClass{
 	/// must define on traited class static $types;
-	
+	public $under;
 	function __construct($typePreferences=null){
 		call_user_func_array([$this,'load'],func_get_args());
 	}
@@ -176,32 +176,7 @@ trait OverClass{
 	}
 }
 
-///Inline Factory Lazy Loader
-trait OCSDLL{
+trait OverClassSingleton{
 	use SingletonDefault, OverClass {
-		OverClass::__call as OC_call;
-		SingletonDefault::__call insteadof OverClass;
-		}
-	public $loaded = false;
-	public $constructArgs = array();
-	function __construct(){
-		$this->constructArgs = func_get_args();
-		call_user_func_array([$this,'load'],$this->constructArgs);
-	}
-	function __get($name){
-		//load if not loaded
-		if(!$this->loaded){
-			call_user_func_array(array($this,'load'),(array)$this->constructArgs);
-			$this->loaded = true;
-		}
-		return $this->$name;
-	}
-	function __call($fnName,$args){
-		//load if not loaded
-		if(!$this->loaded){
-			call_user_func_array(array($this,'load'),(array)$this->constructArgs);
-			$this->loaded = true;
-		}
-		return $this->OC_call($fnName,$args);
-	}
+		OverClass::__call insteadof SingletonDefault;	}
 }
