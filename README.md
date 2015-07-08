@@ -24,11 +24,18 @@ Once this is done, point an apache virtual host to /var/www/brushfire.sample/pub
 ### Instance Layout
 *	standard
 	*	control/
+		*	routes.php
+			*	A list of routes.  Without this, urls will map directly to control files (without extension)
+		*	control files.  For instance, add test.php and the url path /test  will load it.
 	*	tool/
-	*	local/
+		*	local/
+			*	class files with class names of \path\to\file .  One is loaded, if present, that corresponds to the loaded control file
 	*	template/
+		*	various .php template files.
 	*	public/
 		*	index.php (copy public/index.php from framework)
+		*	static files will be served  statically from this directory.  
+			Ex if someone goes ti /test.html, they will get public/test.html
 	*	apt/
 		*	config.php (see and copy project.config.template.php)
 		*	other files that aren't versioned

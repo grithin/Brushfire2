@@ -16,6 +16,9 @@ if(!$_SERVER['argv'][1] || $_SERVER['argv'][1] == 'help'){
 	mkdir($folder.'template/common',0777,true);
 	mkdir($folder.'apt',0777,true);
 	mkdir($folder.'public',0777,true);
+	mkdir($folder.'public/img',0777,true);
+	mkdir($folder.'public/css',0777,true);
+	mkdir($folder.'public/js',0777,true);
 	mkdir($folder.'tool',0777,true);
 	mkdir($folder.'resource',0777,true);
 	
@@ -23,6 +26,8 @@ if(!$_SERVER['argv'][1] || $_SERVER['argv'][1] == 'help'){
 	copy('composer.json',$folder.'composer.json');
 	copy('project.gitignore.template',$folder.'.gitignore');
 	copy('public/index.php',$folder.'public/index.php');
+	copy('public/.htaccess',$folder.'public/.htaccess');
+	copy('public/favicon.ico',$folder.'public/favicon.ico');
 	copy('project.routes.template.php',$folder.'control/routes.php');
 	copy('template/header.php',$folder.'template/common/header.php');
 	
