@@ -65,7 +65,8 @@ $_ENV['errorDetail'] = 2;
 $_ENV['displayErrors'] = true;
 ///regex match on file for stack parts to exclude from error stack output
 $_ENV['errorStackExclude'] = [];#['@^system:@'];
-
+///will load Debug class on loader
+$_ENV['debug'] = true;
 
 //+	}
 //+	Session config {

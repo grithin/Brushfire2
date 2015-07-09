@@ -23,7 +23,7 @@ if($argc){
 	
 	$args = getopt('p:q:m:c:h:',array('path:','query:','mode:','config:','cookie:','host:'));
 	
-	$_ENV['envMode'] = $args['mode'] ? $args['mode'] : $args['m'];
+	$_ENV['mode'] = $args['mode'] ? $args['mode'] : $args['m'];
 	
 	$_SERVER['QUERY_STRING'] = $args['query'] ? $args['query'] : $args['q'];
 	$_SERVER['HTTP_HOST'] = $args['host'] ? $args['host'] : $args['h'];
@@ -41,7 +41,7 @@ if($argc){
 	require_once ($_ENV['configFile']);
 	
 }else{
-	$_ENV['envMode'] = getenv('mode');
+	$_ENV['mode'] = getenv('mode');
 	require_once $_ENV['configFile'];
 }
 require_once $_ENV['systemFolder'].'loader.php';
