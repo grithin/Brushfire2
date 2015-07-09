@@ -37,7 +37,6 @@ class Memcached extends \Cache{
 		return call_user_func_array([$this->under,'get'],$args);
 	}
 	protected function set(){
-		#\Debug::toss('fuck this');
 		$args = func_get_args();
 		$args[0] = $this->prefix.$args[0];
 		return call_user_func_array([$this->under,'set'],$args);

@@ -13,7 +13,7 @@ require_once $_ENV['systemFolder'].'tool/CommonTraits.php';
 require_once $_ENV['systemFolder'].'tool/Config.php';
 Config::init();
 
-require_once $_ENV['systemFolder'].'tool/Config.php';
+require_once $_ENV['systemFolder'].'tool/Debug.php';
 
 #Cache setup (used by autoloader,view,session)
 require_once $_ENV['systemFolder'].'tool/Cache.php';
