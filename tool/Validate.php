@@ -210,8 +210,8 @@ class Validate{
 		unset($_SESSION['csrfToken']);
 		if(!$value){
 			\Debug::toss('Missing CSRF token','InputException');
-		}elseif($csrfToken != $csrfToken){
-			\Debug::toss('CSRF token mismatch','InputException');
+		}elseif($value != $csrfToken){
+			\Debug::toss('CSRF token mismatch.  Reload this page and send only one form at a time.','InputException');
 		}
 	}
 	///matches value against (string)callable return value

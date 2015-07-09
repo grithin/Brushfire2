@@ -1156,6 +1156,11 @@ bf.view.form.getCsrf = function(callback){
 	var suscess = bf.view.form.response.arg({success:function(json){ callback(json.value) }	})
 	$.json({url:'/brushfire/csrf',success:suscess})
 }
+
+///add a csrf token as input element into a form
+/**
+ex bf.view.form.addCsrf($('form'))
+*/
 bf.view.form.addCsrf = function(container){
 	bf.view.form.getCsrf(function(csrf){
 		container.append($('<input type="hidden" name="_csrfToken"/>').val(csrf))	})
@@ -1373,20 +1378,34 @@ bf.view.form.getLine = function(field,value,options){
 }
 ///submit a single form using json post or file post
 /**
+@param	options	{
+	success: see bf.view.form.response,
+	url: url to post to,
+	csrf: whether to add in a csrf token}
 @note it is expected that all ajax responses will conform to having a 'status' attribute, and so ajaxFormResponse is used
 */
 bf.view.form.submit = function(options){
 	var form = $(this)
 	bf.view.sm.uninserts({context:form})
-	var data = {item:bf.view.form.data(form),type:form.attr('data-changeType')}
-	success = bf.view.form.response.arg({context:form,success:options.success})
-	var files = $('input[type="file"]',form)
-	if(files.size()){
-		$.file({success:success,data:data,url:options.url}, files.toArray())
-	}else{
-		$.json({success:success,data:data,url:options.url})
+	
+	var doPost = function(){
+		var data = {item:bf.view.form.data(form),type:form.attr('data-changeType')}
+		success = bf.view.form.response.arg({context:form,success:options.success})
+		var files = $('input[type="file"]',form)
+		if(files.size()){
+			$.file({success:success,data:data,url:options.url}, files.toArray())
+		}else{
+			$.json({success:success,data:data,url:options.url})
+		}
+		return false
 	}
-	return false
+	if(options.csrf){
+		bf.view.form.getCsrf(function(csrf){
+			form.append($('<input type="hidden" name="_csrfToken"/>').val(csrf))
+			doPost()		})
+	}else{
+		return doPost()
+	}
 }
 
 ///submit multiple forms using json post (no files)
