@@ -81,10 +81,12 @@ class Control{
 		//++ }
 		
 		//set time zone if specified
-		if(self::$in['_timezoneOffset']){
-			\User::setTimezone(timezone_name_from_abbr("", -60*self::$in['_timezoneOffset'], false));
-		}elseif(self::$in['_timezone']){
-			\User::setTimezone(self::$in['_timezone']);
+		if(self::$in['_setTimezone']){
+			if(self::$in['_tzOffset']){
+				\User::setTimezone(timezone_name_from_abbr("", -60*self::$in['_tzOffset'], self::$in['_dst']));
+			}elseif(self::$in['_tz']){
+				\User::setTimezone(self::$in['_tz']);
+			}
 		}
 	
 		
@@ -213,7 +215,8 @@ class Control{
 		return $messages;
 	}
 	
-	static $validationFields;///< the [field=>value,...] array of fields being validated
+	static $validationFields;///< the [field=>value,...] reference to array of fields being validated
+	static $validatedFields;///< array of fields keys => array validations made against.  Reset on each validate call
 	/**
 	@param	rules	[field=>rules,field=>rules,...]	see applyFieldRules for rules format
 	@param	env	[
@@ -238,6 +241,8 @@ class Control{
 		
 		//set to allow validater callbacks to use the context of the other fields
 		self::$validationFields = &$env['in'];
+		//reset validatedFields
+		self::$validatedFields = [];
 		
 		foreach($rules as $field=>$ruleSet){
 			unset($fieldValue, $byReference);
@@ -371,8 +376,24 @@ class Control{
 					break;
 				}
 			}
+			self::$validatedFields[$field][] = $callback;
 		}
 		return ['hasError'=>$fieldError];
+	}
+	///check if a field has been valiated with a certain validation.
+	/**
+	@param	validation	the non-shortened validation callback form
+	*/
+	function fieldValidated($field,$validation,$validatedFields=null){
+		$validatedFields = $validatedFields ? $validatedFields : self::$validatedFields;
+		$validations = $validatedFields[$field];
+		if($validations){
+			foreach($validations as $v){
+				if($v == $validation){
+					return true;
+				}
+			}
+		}
 	}
 	function ruleCallable($callback,&$env){
 		if(is_string($callback)){

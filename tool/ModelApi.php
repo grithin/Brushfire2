@@ -312,6 +312,7 @@ class ModelApi{
 	///check each present field against general validation
 	function upsertValidate($table,$fields,&$in){
 		$validaters = [];
+		//\Control::$model[$scope]['validaters']['upsert'][$field]
 		foreach($fields as $field){
 			$validaters[$field] = self::generalFieldValidaters($field,\Control::$model->field($field,$table));
 		}
@@ -351,7 +352,7 @@ class ModelApi{
 	
 	
 	function generalFieldValidaters($fullName,$info){
-		$field = explode('.',$fullName)[1];
+		$field = array_pop(explode('.',$fullName));
 		$validaters = [];
 		
 		//speical handling for 'created' and 'updated'
@@ -383,11 +384,16 @@ class ModelApi{
 			case 'datetime':
 			case 'timestamp':
 				$validaters[] = '!v.date';
-				$validaters[] = 'f.datetime';
+				//since f.datetime converts using timezone, can't run it twice without corrupting data if client has different tz
+				if(!\Control::fieldValidated($field,['Filter','datetime'])){
+					$validaters[] = 'f.datetime';
+				}
 			break;
 			case 'date':
 				$validaters[] = '!v.date';
-				$validaters[] = 'f.toDate';
+				if(!\Control::fieldValidated($field,['Filter','datetime'])){
+					$validaters[] = 'f.toDate';
+				}
 			break;
 			case 'text':
 				if($info['limit']){

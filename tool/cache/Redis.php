@@ -18,7 +18,8 @@ class Redis extends \Cache{
 	function touch(){
 		$args = func_get_args();
 		$args[0] = $this->prefix.$args[0];
-		return call_user_func_array([$this->under,'touch'],$args);
+		$args[1] = (int)$args[1];
+		return call_user_func_array([$this->under,'expire'],$args);
 	}
 	function delete(){
 		$args = func_get_args();
@@ -34,6 +35,9 @@ class Redis extends \Cache{
 		$args = func_get_args();
 		$args[0] = $this->prefix.$args[0];
 		$args[1] = json_encode($args[1]);
+		if(isset($args[2]) && !is_array($args[2])){
+			$args[2] = (int)$args[2];//Redis php lib will fail on string number
+		}
 		return call_user_func_array([$this->under,'set'],$args);
 	}
 	

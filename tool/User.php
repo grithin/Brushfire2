@@ -58,9 +58,11 @@ class User{
 			try{
 				(new \Time())->setZone($timezone);
 			}catch(Exception $e){
+				Debug::log($e);
 				return;
 			}
 			$_SESSION['timezone'] = $timezone;
+			Debug::log($_SESSION);
 		}
 	}
 	static function id(){

@@ -131,7 +131,7 @@ class Curl{
 			}elseif(self::$defaultErrorHandler){
 				call_user_func(self::$defaultErrorHandler,$this->request);
 			}else{
-				$this->error = array('number'=>curl_errno($this->request),'text'=>curl_error($this->request));
+				$this->error = Debug::toss('Error number:'.curl_errno($this->request).' with text: '.curl_error($this->request), 'CurlException');
 			}
 		}
 		

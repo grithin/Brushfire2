@@ -22,12 +22,12 @@ class WebData{
 	}
 	static function getDomHeaderColumnsPositions($xpath,$headerRow,$columns,$query='td | th'){
 		$headerColumns = $xpath->query($query,$headerRow);
-		$headerColumns = DOMTools::removeTextNodes($headerColumns);
+		$headerColumns = DomTools::removeTextNodes($headerColumns);
 		return self::findDomColumns($headerColumns,$columns);
 	}
 	static function getMappedDomColumns($row,$map){
 		$columnValues = array();
-		$columns = DOMTools::childNodes($row);
+		$columns = DomTools::childNodes($row);
 		foreach($map as $key=>$position){
 			$columnValues[$key] = trim($columns[$position]->nodeValue);
 		}
@@ -53,13 +53,10 @@ class WebData{
 	}
 	///pack post array with asp validation variables based on previously loaded page
 	static function aspParseInto($html,$array){
-		list($dom,$xpath) = DOMTools::loadHtml($html);
+		list($dom,$xpath) = DomTools::loadHtml($html);
 		
 		//look for even validation
-		$nodes = $xpath->query('//input[@name=\'__EVENTVALIDATION\']');
-		if($nodes->length){
-			$array['__EVENTVALIDATION'] = $nodes->item(0)->getAttribute('value');
-		}
+		
 		$nodes = $xpath->query('//input[@name=\'__VIEWSTATE\']');
 		if($nodes->length){
 			$array['__VIEWSTATE'] = $nodes->item(0)->getAttribute('value');
@@ -67,6 +64,14 @@ class WebData{
 		$nodes = $xpath->query('//input[@name=\'__VIEWSTATE1\']');
 		if($nodes->length){
 			$array['__VIEWSTATE1'] = $nodes->item(0)->getAttribute('value');
+		}
+		$nodes = $xpath->query('//input[@name=\'__VIEWSTATEGENERATOR\']');
+		if($nodes->length){
+			$array['__VIEWSTATEGENERATOR'] = $nodes->item(0)->getAttribute('value');
+		}
+		$nodes = $xpath->query('//input[@name=\'__EVENTVALIDATION\']');
+		if($nodes->length){
+			$array['__EVENTVALIDATION'] = $nodes->item(0)->getAttribute('value');
 		}
 		
 		//optional stuff

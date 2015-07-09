@@ -20,10 +20,12 @@ class Session {
 	
 	///internal use.  data object
 	static $data;
-	
+	///$_SESSION data prior to opening a session (since php clears it) to merge into new $_SESSION
+	static $preData;
 	///makes this class the session save handler, and tries to open a session
 	///@note used b/c if handler set in loader, this class would be loaded on all requests
 	static function start(){
+		self::$preData = $_SESSION;
 		session_set_save_handler(
 				array(Session,"open"),
 				array(Session,"close"),
@@ -92,7 +94,7 @@ class Session {
 	static function write($id,$data){
 		if(!self::$started){ return; }
 		
-		$data = serialize($_SESSION);
+		$data = json_encode($_SESSION);
 		//data wasn't changed
 		if(md5($data) == self::$data->hash){
 			if(Session::$other){
@@ -171,7 +173,12 @@ class SessionData{
 			}
 		}
 		$this->hash = md5($data);
-		$data = $data ? unserialize($data) : null;
+		$data = $data ? json_decode($data,true) : null;
+		
+		if(Session::$preData){
+			$data = array_merge((array)$data,Session::$preData);
+			Session::$preData = null;
+		}
 		return $data;
 	}
 	function create(){

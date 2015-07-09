@@ -83,6 +83,7 @@ class Debug{
 		}
 		return $out;
 	}
+	static $runId;
 	///put variable into the log file for review
 	/** Sometimes printing out the value of a variable to the screen isn't an option.  As such, this function can be useful.
 	@param	var	variable to print out to file
@@ -90,6 +91,9 @@ class Debug{
 	@param	logfile	the log file to write to
 	*/
 	static function log($var,$title='',$logfile=null){
+		if(!self::$runId){
+			self::$runId = \Tool::randomString(10);
+		}
 		if($logfile){
 			$fh = fopen($logfile,'a+');
 		}else{
@@ -99,7 +103,7 @@ class Debug{
 		$bTrace = debug_backtrace();
 		$file = self::abbreviateFilePath($bTrace[0]['file']);
 		$line = $bTrace[0]['line'];
-		fwrite($fh,"+=+=+=+ ".date("Y-m-d H:i:s").' | '.$_ENV['projectName']." | TO FILE | ".$file.':'.$line.' | '.$title." +=+=+=+\n".self::toString($var)."\n");
+		fwrite($fh,"+=+=+=+ ".date("Y-m-d H:i:s").' | '.$_ENV['projectName']." | RID ".self::$runId." PID ".getmypid()." | ".$file.':'.$line.' | '.$title." +=+=+=+\n".self::toString($var)."\n");
 		fclose($fh);
 	}
 	///get a line from a file

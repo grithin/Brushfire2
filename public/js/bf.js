@@ -52,6 +52,22 @@ RegExp.quote = function(str) {
 	return (str+'').replace(/([.?*+^$[\]\\(){}|-])/g, "\\$1");
 }
 
+/*
+Ex
+var today = new Date();
+if (today.dst()) { alert ("Daylight savings time!"); }
+*/
+Date.prototype.stdTimezoneOffset = function() {
+    var jan = new Date(this.getFullYear(), 0, 1);
+    var jul = new Date(this.getFullYear(), 6, 1);
+    return Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());///dst always back one hour in compaarison
+}
+
+Date.prototype.dst = function() {
+    return this.getTimezoneOffset() < this.stdTimezoneOffset();
+}
+
+
 //++ jquery mods {
 ///jquery ajax post for json request and response.  the laziness is  strong with this one
 $.json = function(options){
@@ -516,6 +532,11 @@ bf.modelData = {}
 bf.modelDataPromises = {}
 
 ///get a data promise for data from a model table
+/**
+@param	apiOptions	see ModelApi.php
+@param	options	{
+	noCache:true|false,}
+*/
 bf.loadData = function(table,apiOptions,options){
 	options = options || {}
 	var json = JSON.stringify(apiOptions)

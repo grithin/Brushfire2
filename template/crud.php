@@ -156,14 +156,14 @@
 			content.append(form)
 			
 			var loadOptions = {type:'readOne',where:where}
-			bf.loadData(table,loadOptions).then(function(item){
+			bf.loadData(table,loadOptions,{noCache:true}).then(function(item){
 				bf.view.form.fillInputs(form,item)
-				$('[type="date"],[type="datetime"]').each(bf.view.ele.utcFormat)	})
+				$('[type="datetime"]').each(bf.view.ele.utcFormat)	})
 			
 			return
 		}else if(type == 'readMany'){
 			var loadOptions = {type:'readMany',where:where,per:20,page:0}
-			bf.loadData(table,loadOptions).then(function(json){
+			bf.loadData(table,loadOptions,{noCache:true}).then(function(json){
 				keyHandlers = {id:function(value,key,callback){
 						value = '<span class="ln" data-id="'+value+'">'+value+'</span>'
 						return callback(value,key,'html')
@@ -185,7 +185,7 @@
 					}).catch(bf.logError)
 		}else if(type == 'readOne'){
 			var loadOptions = {type:'readOne',where:where}
-			bf.loadData(table,loadOptions).then(function(item){
+			bf.loadData(table,loadOptions,{noCache:true}).then(function(item){
 				content.append($('<pre></pre>').text(JSON.stringify(item,null,1)))	})
 		}
 	}
