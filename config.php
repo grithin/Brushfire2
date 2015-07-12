@@ -127,7 +127,7 @@ $_ENV['CRUDbadIdCallback'] = 'badId';
 //+	}
 
 //+	Misc config {
-///email unique identifier; 
+///email unique identifier;
 /**when sending an email, you have to generate a message id.  To prevent collisions, this id will be used in addition to some random string*/
 $_ENV['emailUniqueId'] = $_ENV['projectName'].'-mail';
 
@@ -139,7 +139,7 @@ $_ENV['cookieDefaultOptions'] = array(
 		'secure' => null,
 		'httpsonly'=> null
 	);
-	
+
 ///time zone (db, internal functions)
 $_ENV['timezone'] = 'UTC';
 

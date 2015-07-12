@@ -19,18 +19,20 @@ What is required
 //Only load if not already loaded
 if(!class_exists('Control',false)){
 	$initialEnv = $_ENV;///< all existing $_ENV values should override system defaults
-	
+
 	if(!$_ENV['projectFolder']){
 		$includerPath = debug_backtrace()[0]['file'];
 		$_ENV['projectFolder'] = realpath(dirname($includerPath)).'/';	}
 	if(!$_ENV['systemFolder']){
 		$_ENV['systemFolder'] = realpath(dirname(__FILE__)).'/';	}
 	require_once $_ENV['systemFolder'].'config.php';
+	//to avoid cache collision between cli scripts
+	$_ENV['cache.default'] = ['type'=>'none','connection'=>[]];
 	$_ENV = array_merge($_ENV,$initialEnv);
-	
+
 	$_ENV['inScript'] = true;
 	$_ENV['doNotRoute'] = true;
-	
+
 	$ensureFolders = ['storageFolder','logFolder'];
 	foreach($ensureFolders as $key){
 		$folder = $_ENV[$key];

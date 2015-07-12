@@ -7,7 +7,7 @@ trait testCall{
 	function __call($fnName,$args){
 		return $this->__testCall($fnName,$args);
 	}
-	
+
 	function __testCall($fnName,$args){
 		if(!method_exists($this,$fnName)){
 			Debug::toss(get_called_class().' Method not found: '.$fnName);
@@ -30,7 +30,7 @@ Static calls default to primary instance.  If no primary instance, attempt to cr
 */
 trait SingletonDefault{
 	use testCall;
-	/// object representing the primary instance name.  
+	/// object representing the primary instance name.
 	///@note Must use name because static::$instances[$instanceName] may change, and linking primary using reference will cause change of static::$instances[$instanceName] on change of primary
 	static $primaryName;
 	static function className($called){
@@ -46,7 +46,7 @@ trait SingletonDefault{
 			$instance = $class->newInstanceArgs(array_slice(func_get_args(),1));
 			static::$instances[$instanceName] = $instance;
 			static::$instances[$instanceName]->name = $instanceName;
-			
+
 			//set primary if no instances except this one
 			if(count(static::$instances) == 1){
 				static::setPrimary($instanceName,$className);
@@ -61,7 +61,7 @@ trait SingletonDefault{
 		$instance = $class->newInstanceArgs(array_slice(func_get_args(),1));
 		static::$instances[$instanceName] = $instance;
 		static::$instances[$instanceName]->name = $instanceName;
-		
+
 		static::setPrimary($instanceName,$className);
 		return static::$instances[$instanceName];
 	}
@@ -96,7 +96,7 @@ instantiate a public version of the class, where the main version serves as a pl
 */
 trait SingletonDefaultPublic{
 	use SingletonDefault;
-	
+
 	static function className($called){
 		return $called.'Public';
 	}

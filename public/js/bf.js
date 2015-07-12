@@ -550,6 +550,9 @@ bf.loadData = function(table,apiOptions,options){
 
 	bf.modelDataPromises[hash] = Q.Promise(function(resolve, reject, notify){
 		options = {url:'/model/'+table,data:apiOptions,success:function(json){
+			//handle error response, if any (if success, do nothing)
+			bf.view.form.response({success:function(){}},json)
+			//return value (the data)
 			bf.modelData[hash] = json.value
 			resolve(bf.modelData[hash]) 	}}
 		$.json(options)	})
@@ -561,7 +564,7 @@ bf.modelFields = {}
 /**
 	can use
 		model.scope.extendedColumns.column.display to customize special linked field display
-	
+
 	@return	a copy of the field object that is moved into bf.modelFields
 */
 bf.getModelField = function(name,modelScope){
@@ -719,17 +722,17 @@ bf.view.redirect = function(loc,windowName,type){
 bf.view.ps = {}
 /**
 ex
-	have a 
+	have a
 		<div id="pagingControl"></div>
 	on the page
 	or define the pagingControl key
-	
+
 	then do
 		bf.view.ps.start({
 			url:'dataUrl',
 			handlers.dataHandler: function(rows){ console.log(rows); }
 			})
-	
+
 	url json post should respond with json result of View::$json['value'] = SortPage::page(); View::endStdJson();
 */
 
@@ -1046,7 +1049,7 @@ bf.view.sm.insert = function(message,options){
 			message = {type:'notice',content:arguments[0]}
 		}
 	}
-	
+
 	options = bf.view.sm.defaults(options)
 	message.fields = message.fields || []
 
@@ -1272,13 +1275,13 @@ bf.view.form.namedIdField = function(env,rows){
 		row = rows[i]
 		select.append($('<option value="'+row.id+'"></option>').text(row.name))
 	}
-	
+
 	if(env.default){
 		select.val(env.default)
 	}else if(env.nullable){
 		select.append($('<option value="">Default</option>'))
 	}
-	
+
 	var existing = $('[name="'+env.field+'"]',env.context)
 	attributes = existing.get(0).attributes
 	for(var i in attributes){
@@ -1387,7 +1390,7 @@ bf.view.form.getLine = function(field,value,options){
 bf.view.form.submit = function(options){
 	var form = $(this)
 	bf.view.sm.uninserts({context:form})
-	
+
 	var doPost = function(){
 		var data = {item:bf.view.form.data(form),type:form.attr('data-changeType')}
 		success = bf.view.form.response.arg({context:form,success:options.success})

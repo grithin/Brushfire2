@@ -46,7 +46,7 @@ class SortPage{
 	/**
 	@param	options	[
 		per: # per page
-		page: current page (starts at 0, (user input taked as -1))
+		page: current page (starts at 1)
 		max: max results to look for in count
 		
 	@note, options param is returns in the  info key, so may be useful to pass in 'sort' key
@@ -54,8 +54,11 @@ class SortPage{
 	static function page($sql,$options=[]){
 		$options['per'] = $options['per'] ? $options['per'] : 50;
 		if($options['page'] === null){
-			$options['page'] = (int)\Control::$in['_page'] - 1;
+			$options['page'] = (int)\Control::$in['_page'];
 		}
+		
+		$options['page']--;
+		
 		$options['page'] = $options['page'] > 0 ? $options['page'] : 0;
 		
 		$offset = $options['per'] * $options['page'];
@@ -66,7 +69,8 @@ class SortPage{
 			$top = $options['max'];
 		}
 		
-		$options['page'] += 1;
+		$options['page']++;
+		
 		$options['pages'] = ceil($top/$options['per']);
 		$options['top'] = $top;
 		$options['count'] = $count;

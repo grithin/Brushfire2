@@ -1,18 +1,18 @@
 <?
 /**
 Underlying cache functions
-	set(key,value,+expirySeconds), 
+	set(key,value,+expirySeconds),
 		expirySeconds= 0, lasts till memcached stops
 		handles arrays
 	get(key)
 	flush(), invalidate all cache
-	
+
 */
 
 class Cache{
 	use OverClassSingleton{	OverClassSingleton::load as OverClassSingleton_load;}
 
-	static $types = array('redis'=>'\cache\Redis','memcache'=>'\cache\Memcached');
+	static $types = array('redis'=>'\cache\Redis','memcache'=>'\cache\Memcached','none'=>'\cache\None');
 	public $prefix;///< used per project to avoid project collisions
 	public $connectionInfo;
 	/**
@@ -27,10 +27,12 @@ class Cache{
 			require_once $_ENV['systemFolder'].'tool/cache/Redis.php';
 		}elseif($args[1] == 'memcache'){
 			require_once $_ENV['systemFolder'].'tool/cache/Memcached.php';
+		}elseif($args[1] == 'none'){
+			require_once $_ENV['systemFolder'].'tool/cache/None.php';
 		}
 		return call_user_func_array(['self','init'],func_get_args());
 	}
-	
+
 	/**
 	@param	type	see static types variable
 	@param	connectionInfo	array:
@@ -41,8 +43,12 @@ class Cache{
 	*/
 	function load(){
 		call_user_func_array([$this,'OverClassSingleton_load'],func_get_args());
-		if(!$this->check()){
-			Debug::toss('Failed to get check cache',__CLASS__.'Exception');
+		$check = [$this,'check'];
+		if(method_exists($this->under,'check')){
+			$check = [$this->under,'check'];
+		}
+		if(!call_user_func($check)){
+			Debug::toss('Cache check failed',__CLASS__.'Exception');
 		}
 	}
 	///sees if cache is working
@@ -56,12 +62,12 @@ class Cache{
 	///updateGet for getting and potentially updating cache
 	/**
 	allows a single client to update a cache while concurrent connetions just use the old cache (ie, prevenut multiple updates).  Useful on something like a public index page with computed resources - if 100 people access page after cache expiry, cache is only re-updated once, not 100 times.
-	
+
 	Perhaps open new process to run update function
-	
+
 	@param	name	name of cache key
 	@param	updateFunction	function to call in case cache needs updating or doesn't exist
-	@param	options	
+	@param	options
 			[
 				update => relative time after which to update
 					ex: "+20 seconds"
@@ -112,11 +118,11 @@ class Cache{
 			$expiryTimeUnix = $updateTime->relative('+'.$options['expiry'].' seconds')->unix();
 			$times['nextExpiry'] = $expiryTimeUnix - time();
 		}
-		
+
 		$times['nextUpdate'] = $updateTimeUnix;
 		return $times;
 	}
-	
+
 	public $local;
 	///local get, to save calls to memcached
 	protected function lGet($key){

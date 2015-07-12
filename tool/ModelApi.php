@@ -8,27 +8,30 @@ updateOne:
 	can update one also using the item object to find existing (will error on matching multiple items)
 	in = {item:{}}
 readOne:
-	
+
 
 */
 class ModelApi{
 	static $table;
-	function standardHandling($allowed=[], $table=null, &$in=null){
-		if($in === null){
+	function standardHandling($allowed=[],$options){
+		//++ handle defaults {
+		if(!isset($options['in'])){
 			$in = &Control::$in;
+		}else{
+			$in = &$options['in'];
 		}
-		$in['type'] = $in['type'] ? $in['type'] : 'readOne';
-		if(!$table){
-			$table = end(\control\Route::$parsedTokens);
-		}
+		//++ }
 		
+		$in['type'] = $in['type'] ? $in['type'] : 'readOne';
+		$table = $options['table'] ? $options['table'] : end(\control\Route::$parsedTokens);
+
 		if($allowed && !in_array($in['type'],$allowed)){
 			\Control::error('Operation not allowed');
 			\View::endStdJson();
 		}
-		
-		
-		
+
+
+
 		switch($in['type']){
 			case 'readOne':
 				\View::$json['value'] = self::readOne($table,$in);
@@ -56,7 +59,7 @@ class ModelApi{
 			case 'deleteMany':
 				\View::$json['value'] = self::deleteMany($table,$in);
 			break;
-			
+
 			default:
 				\Control::error('No matched _type');
 			break;
@@ -92,10 +95,10 @@ class ModelApi{
 		unset(\Control::$additionalOptions['itemOffset']);
 		return $ups;
 	}
-	function createOne($scope,$options=[]){ 
+	function createOne($scope,$options=[]){
 		$options['type'] = 'create';
 		return self::upsert($scope,$options);	}
-	function updateOne($scope,$options=[]){ 
+	function updateOne($scope,$options=[]){
 		$options['type'] = 'update';
 		return self::upsert($scope,$options);	}
 	function upsert($scope,$options=[]){
@@ -134,7 +137,7 @@ class ModelApi{
 			}
 		}
 		//++ }
-		
+
 		//++ allow resolution for up to one link deep {
 		$possibleListedFields = self::possibleFields($scope,2);
 		$listedFields = array_intersect(array_keys($in), $possibleListedFields);
@@ -152,7 +155,7 @@ class ModelApi{
 			foreach($references as $dc=>$reference){
 				$rows = self::readMany($reference['link']['ft'],['where'=>$reference['where'],
 					'select'=>'id',
-					'page'=>0,
+					'page'=>1,
 					'limit'=>2]);
 				if(count($rows) > 1){
 					\Control::error('Too many matched reference rows using: '.var_export($reference,1));
@@ -169,20 +172,20 @@ class ModelApi{
 			}
 		}
 		//++ }
-		
+
 		//++ run 'upsert' validaters {
 		if(\Control::$model[$scope]['validaters']['upsert']){
 			if(!Control::validate(\Control::$model[$scope]['validaters']['upsert'],['in'=>&$in])){
 				return false;
 			}
 		}
-		
+
 		//placed after custom rules since custom rules may format or formulate fields
 		if(!self::upsertValidate($scope,$fields,$in)){
 			return false;
 		}
 		//++ }
-		
+
 		//++ check for unique row fields in the input {
 		foreach(\Control::$model[$scope]['keys'] as $key=>$keyFields){
 			$notKey = false;
@@ -197,7 +200,7 @@ class ModelApi{
 				$matchedKeys[] = $keyFields;
 			}
 		}
-		
+
 		//++ }
 		//++ check matched unique rows against database {
 		if($matchedKeys){
@@ -228,15 +231,15 @@ class ModelApi{
 									Control::error('{_FIELD_} match(es) an existing record',$fields);
 									return false;	}	}	}	}	}	}	}
 		//++ }
-		
+
 		if(!$match && $options['type'] == 'update'){
 			Control::error('No record found',$fields);
 			return false;
 		}
-		
+
 		$options['possibleFields'] = $possibleFields;
 		$options['scope'] = $scope;
-		
+
 		if($match && !$options['subtype']){//update
 			if(\Control::$model[$scope]['validaters']['update']){
 				if(!Control::validate(\Control::$model[$scope]['validaters']['update'],['in'=>&$in])){
@@ -246,7 +249,7 @@ class ModelApi{
 			$options['matchedKeys'] = $matchedKeys;
 			$options['lastMatchedKey'] = $lastMatchedKey;
 			$options['in'] = &$in;
-			
+
 			return self::doUpdate($options);
 		}else{//create
 			if(\Control::$model[$scope]['validaters']['create']){
@@ -261,7 +264,7 @@ class ModelApi{
 			return self::doCreate($options);
 		}
 	}
-	
+
 	static function descopeFields($scopedFields){
 		foreach($scopedFields as $k=>$v){
 			$fields[array_pop(explode('.',$k))] = $v;
@@ -276,7 +279,7 @@ class ModelApi{
 		if(\Control::$model[$options['scope']]['columns']['created']){
 			$upsert['created'] = new Time('now',$_ENV['timezone']);
 		}
-		
+
 		if($options['createCallback']){
 			return call_user_func_array($options['createCallback'],[&$upsert,&$options]);
 		}
@@ -293,7 +296,7 @@ class ModelApi{
 		$options['id'] = \Db::insert($options['scope'],$upsert);
 		return $options;
 	}
-	
+
 	///extract fields from input and update based on matchedKeys
 	function  doUpdate($options){
 		//filters may have added in some fields, reget
@@ -308,7 +311,7 @@ class ModelApi{
 		Db::update($options['scope'],$upsert,Arrays::extract($options['matchedKeys'][$options['lastMatchedKey']],$options['in']));
 		return $options;
 	}
-	
+
 	///check each present field against general validation
 	function upsertValidate($table,$fields,&$in){
 		$validaters = [];
@@ -325,10 +328,10 @@ class ModelApi{
 				$validaters[$field][] = 'f.remove';
 			}elseif(!$info['nullable'] && $info['default'] === null){
 				/**
-				not nullable + default = null interpretted to mean field must be filled.  
-					Consequently,	to allow for empty text fields, the column must be nullable, 
+				not nullable + default = null interpretted to mean field must be filled.
+					Consequently,	to allow for empty text fields, the column must be nullable,
 						and since (
-							text columns can not have '' defaults, text fields, 
+							text columns can not have '' defaults, text fields,
 							and '' inputs are set to null on nullable fields
 						) empty text fields should be handle as nulls
 				*/
@@ -339,7 +342,7 @@ class ModelApi{
 				){
 					continue;
 				}
-				
+
 				$validaters[$field][] = '!v.filled';
 			}
 		}
@@ -349,12 +352,12 @@ class ModelApi{
 			return true;
 		}
 	}
-	
-	
+
+
 	function generalFieldValidaters($fullName,$info){
 		$field = array_pop(explode('.',$fullName));
 		$validaters = [];
-		
+
 		//speical handling for 'created' and 'updated'
 		if(
 			($field == 'created' || $field == 'updated') &&
@@ -362,7 +365,7 @@ class ModelApi{
 		){
 			return [];
 		}
-		
+
 		$validaters[] = 'f.toString';
 		if(!$info['nullable'] && !$info['autoIncrement']){
 			if($info['default'] === null){
@@ -376,7 +379,7 @@ class ModelApi{
 		}else{
 			//for nullable columns, empty inputs (0 character strings) are null
 			$validaters[] = array('f.toDefault',null);
-			
+
 			//column may not be present.  Only validate if present
 			$validaters[] = '?!v.filled';
 		}
@@ -415,7 +418,7 @@ class ModelApi{
 				$validaters[] = '!v.isFloat';
 			break;
 		}
-		
+
 		return $validaters;
 	}
 	///returns fields prefixed with scope.  Useful since $fields can be a string (otherwise array_map would be used)
@@ -448,23 +451,23 @@ class ModelApi{
 	*/
 	function select($table,$fields){
 		$fields = Arrays::toArray($fields);
-		
+
 		$info = \Control::$model[$table];
 		$linkedTables = [];
-		
+
 		$joins = [];
 		foreach($fields as $field){
 			$selectPart[] = self::quoteField($table.'.'.$field).' '.\Db::quote($field);
 			$joins = array_merge($joins,self::makeJoins($field,$table));
 		}
-		
+
 		$from = \Db::quoteIdentity($table);
 		if($joins){
 			$from .= "\n\tleft join ".implode("\n\tleft join ",$joins);
 		}
 		return 'select '.implode(', ',$selectPart)."\nfrom ".$from;
 	}
-	
+
 	///create the "table on column = column" for joins
 	function makeJoins($field,$current){
 		$parts = explode('.',$field);
@@ -477,12 +480,12 @@ class ModelApi{
 					Debug::toss('Unknown unlinked field: '.$field);
 				}elseif(!$linksUsed[$fieldPrefix]){
 					$previousColumn = \Db::quoteIdentity(implode('.',$usedParts),false).'.'.\Db::quoteIdentity($part);
-					
-					
+
+
 					$usedParts[] = $part;
 					$newTableAlias = \Db::quoteIdentity(implode('.',$usedParts),false);
 					$linkColumn = $newTableAlias.'.'.\Db::quoteIdentity($link['fc']);
-					
+
 					//table is aliased to the column prefix (the linking key)
 					$joins[] = \Db::quoteIdentity($link['ft']).' '.$newTableAlias.' on '.$previousColumn.' = '.$linkColumn;
 				}
@@ -502,7 +505,7 @@ class ModelApi{
 		}else{
 			$fields = $columns;
 		}
-		
+
 		if($lowerDepth){
 			$links = \Control::$model[$scope]['links']['dc'];
 			if($links){
@@ -514,7 +517,7 @@ class ModelApi{
 		return $fields;
 	}
 	/**
-	
+
 	*/
 	function delete($scope,$options=[]){
 		if($options['possibleFields']){
@@ -526,7 +529,7 @@ class ModelApi{
 			$possibleFields = self::possibleFields($scope);
 		}
 		$selectFields = [];
-		
+
 		if($options['where']){
 			$where = $options['where'];
 			$whereSet = self::handleWhere($where, $possibleFields, $selectFields, $scope);
@@ -534,7 +537,7 @@ class ModelApi{
 			\Control::error('No item selected');
 			return;
 		}
-		
+
 		$joins = [];
 		foreach($selectFields as $field){
 			$joins = array_merge($joins,self::makeJoins($field,$scope));
@@ -545,7 +548,7 @@ class ModelApi{
 		}else{
 			$sql = 'delete from '.$from;
 		}
-		
+
 		$sql .= ' WHERE '.implode(' AND ',$whereSet);
 		return \Db::query($sql)->rowCount();
 	}
@@ -566,23 +569,23 @@ class ModelApi{
 		}else{
 			$selectFields = self::possibleFields($scope,1);
 		}
-		
+
 		if(!$selectFields){
 			\Control::error('No fields for select');
 			return;
 		}
-		
+
 		if($options['where']){
 			$where = $options['where'];
 			$whereSet = self::handleWhere($where, $possibleFields, $selectFields, $scope);
 		}
-		
+
 		$sql = self::select($scope,$selectFields);
-		
+
 		if($whereSet){
 			$sql .= ' WHERE '.implode(' AND ',$whereSet);
 		}
-		
+
 		return ['sql'=>$sql,'possibleFields'=>$possibleFields,'selectFields'=>$selectFields];
 	}
 	function readOne($scope,$options=[]){
@@ -598,12 +601,12 @@ class ModelApi{
 		$read = self::read($scope,$options);
 		if($read){
 			$sql = $read['sql'];
-			
+
 			if($options['sort']){
 				$sort = \view\SortPage::sort($read['possibleFields'],$options['sort'])['sql'];
 				$sql .= $sort;
 			}
-			
+
 			if(isset($options['page'])){
 				return \view\SortPage::page($sql,$options);
 			}else{
@@ -620,7 +623,7 @@ class ModelApi{
 		}else{
 			$whereSet[] = ['id','=',\Db::quote($where)];
 		}
-		
+
 		$usedWhereSet = [];
 		foreach($whereSet as $set){
 			if(!in_array($set[1],['=','>','<','<>','<=','>='])){
@@ -640,11 +643,11 @@ class ModelApi{
 					$set[1] = ' is not ';
 				}
 			}
-			
+
 			$usedWhereSet[] = self::quoteField($scope.'.'.$set[0]).' '.$set[1].' '.$set[2];
 		}
 		return $usedWhereSet;
-		
+
 	}
 	function handleKeyValue($field,$value){
 		if(is_array($value)){
