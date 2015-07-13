@@ -8,14 +8,14 @@
 	}
 </style>
 <div id="crudHeader" class="row">
-	
+
 </div>
 <div>
 	{"out?&lt;&gt;":null}
 </div>
 <div id="where" class="row">
 	Where <input type="text" name="where"/>
-	Type 
+	Type
 	<select name="type">
 		<option value="readOne">readOne</option>
 		<option value="readMany">readMany</option>
@@ -26,7 +26,7 @@
 	<span class="button" id="whereButton">Search</span>
 </div>
 <div id="typeContent" class="row">
-	
+
 </div>
 <div id="pagingControl"></div>
 <style>
@@ -51,8 +51,8 @@
 		padding-right:5px;
 		color:rgb(0,100,0);
 	}
-	
-	
+
+
 </style>
 
 <script>
@@ -80,7 +80,7 @@
 				return itemEle;
 			}
 		}
-		
+
 		var itemsEle, itemEle;
 		itemsEle = $('<div class="items"></div>')
 		for(var i in json){
@@ -109,16 +109,17 @@
 		return ele
 	}
 
-	
-	
+
+
 	var table = bf.url.requestVar('table')
 	table = table || 'any'
 	var type = bf.url.requestVar('type')
 	type = type || 'readMany'
 	$('#where [name="type"]').val(type)
-	
+	$('#where [name="where"]').val(bf.url.requestVar('where'))
+
 	var content = $('#typeContent')
-	
+
 	function updateType(newType){
 		if(newType){
 			$('#where [name="type"]').val(newType)
@@ -135,7 +136,7 @@
 			content.append(form)
 			return
 		}
-		
+
 		$('#where').show()
 		var where = $('#where [name="where"]').val()
 		if(!where){
@@ -143,7 +144,7 @@
 		}else{
 			where = JSON.parse(where)
 		}
-		
+
 		if(type == 'deleteOne'){
 			var loadOptions = {type:'deleteOne',where:where}
 			bf.loadData(table,loadOptions).then(function(item){
@@ -154,12 +155,12 @@
 			var submitOptions = {url:'/model/'+table,success:'Updated'}
 			form.submit(bf.view.form.submit.arg(submitOptions))
 			content.append(form)
-			
+
 			var loadOptions = {type:'readOne',where:where}
 			bf.loadData(table,loadOptions,{noCache:true}).then(function(item){
 				bf.view.form.fillInputs(form,item)
 				$('[type="datetime"]').each(bf.view.ele.utcFormat)	})
-			
+
 			return
 		}else if(type == 'readMany'){
 			var loadOptions = {type:'readMany',where:where,per:20,page:0}
@@ -176,12 +177,12 @@
 					var id = $(this).attr('data-id')
 					$('#where [name="where"]').val('{"id":'+id+'}')
 					updateType('updateOne')	})
-				
+
 				json.info.url = '/model/'+table
-				json.info.handlers = {dataHandler: function(rows){ 
+				json.info.handlers = {dataHandler: function(rows){
 					content.empty().append(multiItemView(rows,shortFieldHandler(),keyHandlers)); }}
 				bf.view.ps.start(json.info)
-				
+
 					}).catch(bf.logError)
 		}else if(type == 'readOne'){
 			var loadOptions = {type:'readOne',where:where}
@@ -191,7 +192,7 @@
 	}
 	$('#whereButton').click(function(){
 		updateType()	})
-	
+
 	bf.modelPromise(table).then(function(value){
 		updateType()
 		for(var key in bf.model){

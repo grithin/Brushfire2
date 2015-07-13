@@ -7,25 +7,25 @@ class Form{
 /** All values are escaped*/
 class FormPublic{
 	function __construct($data=null,$options=null){
-		$this->in = Control::$in;
-		
+		$this->in = \Control::$in;
+
 		///an array of keys to values used in conjuction with TO_ARRAY to serve as override values for form fields
 		if(!is_array($data)){
 			if($this->in){
 				$this->data = $this->in;
 			}else{
-				$this->data = Control::$item;
+				$this->data = \Control::$item;
 			}
 		}else{
 			$this->data = $data;
 		}
-		
+
 		///the the of behavior for determining what the actual value of a form field should be
 		$this->valueBehavior = $options['valueBehavior'] ? $options['valueBehavior'] : 'to_input';
 		///attribute parsers to apply when handling options on form method
 		$this->additionalParsers = $options['additionalParsers'];
 	}
-	
+
 	/// prefix function with "_" to temporarily override value behavior, and make first argument the overriding behavior.
 	function __call($name,$arguments){
 		if(!method_exists($this,$name)){
@@ -41,8 +41,8 @@ class FormPublic{
 		}
 		return call_user_func_array(array($this,$name),$arguments);
 	}
-	
-	
+
+
 	///tries to find value using page input.
 	/**
 	Defaults to param if param available; if not, then to $this->data
@@ -83,11 +83,11 @@ class FormPublic{
 	function to_params($name,$value=null){
 		return $this->to_input($name,$value,true);
 	}
-	
+
 	/// resolves the value for a given form field name
 	/**
 		@param options
-			behavior	either a string of one of the Form methods, or a custom callback - for selecting a value (where multiple inputs might be present). 
+			behavior	either a string of one of the Form methods, or a custom callback - for selecting a value (where multiple inputs might be present).
 			allowArray	whether to allow the value return to be an array (useful for multi-selects)
 			format	callback for formatting the value after it is found
 	*/
@@ -97,17 +97,17 @@ class FormPublic{
 			$behavior = array($this,$behavior);
 		}
 		$value = call_user_func_array($behavior,array($name,$value));
-		
+
 		if(!$options['allowArray']){
-			\control\Field::makeString($value);
+			\Filter::makeString($value);
 		}
 		if($options['format']){
 			$value = call_user_func_array($options['format'],array($value,$name));
 		}
-		
+
 		return $value;
 	}
-	
+
 	///used internally.  Generates the additional attributes provides for a field
 	function attributes($x,$name='default'){
 		if($this->additionalParsers){
@@ -124,7 +124,7 @@ class FormPublic{
 			$additions[] = $x['extra'];
 		}
 		unset($x['extra']);
-		
+
 		$attributeTypes = array('id','title','alt','rows','placeholder');
 		foreach($attributeTypes as $attribute){
 			if($x[$attribute]){
@@ -134,7 +134,7 @@ class FormPublic{
 		}
 		if($x){
 			//add onclick events
-			foreach($x as $k=>$v){		
+			foreach($x as $k=>$v){
 				if(strtolower(substr($k,0,2)) == 'on'){
 					$additions[] = $k.'="'.$v.'"';
 				}elseif(strtolower(substr($k,0,5) == 'data-')){
@@ -148,7 +148,7 @@ class FormPublic{
 				}
 			}
 		}
-		
+
 		if($additions){
 			return ' '.implode(' ',$additions).' ';
 		}
@@ -172,9 +172,9 @@ class FormPublic{
 		}
 		//makes an array where values are turned into an array of keys (= value) where each element is true
 		$values = array_fill_keys($values, true);
-		
+
 		$specialX = \Arrays::separate(array('none','noneValue'),$x);
-		
+
 		//create an array specifying the selected options
 		$detailedOptions = array();
 		//allow for empty array
@@ -190,7 +190,7 @@ class FormPublic{
 				}
 			}
 		}
-		
+
 		$field =  '<select name="'.$name.'" '.$this->attributes($x,$name).'>';
 		if($specialX['none']){
 			$value = 0;
@@ -209,7 +209,7 @@ class FormPublic{
 					.' value="'.htmlspecialchars($k).'" '.
 					($details['x'] ? $this->attributes($details['x']) : '').
 					'>'.htmlspecialchars($details['display']).'</option>';
-				
+
 			}
 		}
 		return $field.'</select>';

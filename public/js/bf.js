@@ -19,8 +19,8 @@ if (!Function.prototype.bind) {
 			fNOP = function () {},//used to maintain the "this" prototype for check against instanceof later
 			fBound = function () {
 				//.apply calls a function using a passed "this" and arguments
-				return fToBind.apply(this instanceof fNOP && oThis //checks to see if original function "this" is same as new oThis, or if oThis is not present
-									? this //in which case, use the original function "this"
+				return fToBind.apply(this instanceof fNOP && oThis ?//checks to see if original function "this" is same as new oThis, or if oThis is not present
+									this //in which case, use the original function "this"
 									: oThis,
 								aArgs.concat(Array.prototype.slice.call(arguments)));//get an array from the arguments object, and concatenate it to preset arguments array
 			};
@@ -141,12 +141,12 @@ bf.setCookie = function(name, value, exp){
 	document.cookie = c;
 }
 bf.readCookie = function(name) {
-	var name = name + "=";
+	name = name + "=";
 	var ca = document.cookie.split(';');
 	for(var i=0;i < ca.length;i++) {
 		var c = ca[i];
 		while (c.charAt(0)==' ') c = c.substring(1,c.length);
-		if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
+		if (c.indexOf(name) === 0) return c.substring(name.length,c.length);
 	}
 	return null;
 }
@@ -265,7 +265,7 @@ bf.url.default = function(url){
 	return url
 }
 
-///take a url and break it up in to page and key value pairs
+///take a url and break it up in to page/path and key value pairs
 bf.url.parts = function(url,decode){
 	decode = decode != null ? decode : true;
 	url = bf.url.default(url)
@@ -367,6 +367,15 @@ bf.url.appends = function(pairs,url,replace){
 	}
 	return url;
 }
+///get the primary id from the url
+bf.url.primaryId = function(url){
+	url = bf.url.default(url)
+	var id = bf.url.requestVar('id')
+	if(!id){
+		id = url.split('?')[0].split('/').pop()
+	}
+	return id;
+}
 //+	}
 
 ///Binary to decimal
@@ -406,7 +415,7 @@ bf.toInt = function(s){
 bf.math = {};
 ///round with some precision
 bf.math.round = function(num, precision){
-	var divider = new Number(bf.str.pad(1,precision+1,'0','right'))
+	var divider = Number(bf.str.pad(1,precision+1,'0','right'))
 	return Math.round(num * divider) / divider;	}
 ///will render string according to php rules
 bf.str = function(str){
@@ -417,7 +426,7 @@ bf.str = function(str){
 	return str;	}
 ///pad a string
 bf.str.pad = function(str,len,padChar,type){
-	str = new String(str);
+	str = String(str);
 	if(!padChar){
 		padChar = '0';	}
 	if(!type){
@@ -870,10 +879,10 @@ bf.view.ps.makePageControl = function(current){
 		paginaterDiv.append('<div class="clk pg'+currentClass+'">'+i+'</div>')	}
 	if(current.page != current.pages){
 		paginaterDiv.append('<div class="clk next">&nbsp;&gt;&nbsp;</div><div class="clk last">&gt;&gt;</div>')	}
-	paginaterDiv.append("<div class='direct'>\
-				<input title='Total of "+current.pages+"' type='text' name='directPg' value='"+current.page+"'/>\
-				<div class='clk go'>Go</div>\
-			</div>")
+	paginaterDiv.append("<div class='direct'>"+
+				"<input title='Total of "+current.pages+"' type='text' name='directPg' value='"+current.page+"'/>"+
+				"<div class='clk go'>Go</div>"+
+			"</div>")
 	//++	}
 
 	//clicks
@@ -1271,7 +1280,8 @@ bf.view.form.model = function(options){
 ///swap out a text fields with a select field for named ids
 bf.view.form.namedIdField = function(env,rows){
 	var select = $('<select></select>')
-	for(var i in rows){
+	var i;
+	for(i in rows){
 		row = rows[i]
 		select.append($('<option value="'+row.id+'"></option>').text(row.name))
 	}
@@ -1284,7 +1294,7 @@ bf.view.form.namedIdField = function(env,rows){
 
 	var existing = $('[name="'+env.field+'"]',env.context)
 	attributes = existing.get(0).attributes
-	for(var i in attributes){
+	for(i in attributes){
 		select.attr(attributes[i].nodeName,attributes[i].nodeValue)
 	}
 	existing.replaceWith(select)
@@ -1616,7 +1626,7 @@ bf.date.format = function( format, timestamp ) {
 		var localJune1 = new Date(t.getFullYear(), 6, 1, 0, 0, 0, 0); // june 1st
 		var utcString = localJan1.toUTCString()
 		var utcJan1 = new Date(utcString.slice(0, utcString.lastIndexOf(' ')-1));
-		var utcString = localJune1.toUTCString()
+		utcString = localJune1.toUTCString()
 		var utcJune1 = new Date(utcString.slice(0, utcString.lastIndexOf(' ')-1));
 
 		var stdTimeOffset = (localJan1 - utcJan1) / (1000 * 60 * 60);

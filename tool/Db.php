@@ -4,7 +4,7 @@
 	- @note Most of the querying methods are overloaded; there are two forms of possible input:
 		- Form 1:	simple sql string; eg "select * from bob where bob = 'bob'"
 		- Form 2: 	see self::select
-			
+
 	@note public $db, the underlying PDO instance, set on lazy load
 */
 Class Db{
@@ -115,12 +115,12 @@ array(
 			//$overloaded + 1 because the expected $sql is actually one of the overloading variables
 			$overloaderArgs = array_slice($actual,-($overloaded + 1));
 			return call_user_func_array(array($this,'select'),$overloaderArgs);
-			
+
 		}else{
 			return end($actual);
 		}
 	}
-	
+
 	/// query returning a row
 	/**See class note for input
 	@warning "limit 1" is appended to the sql input
@@ -158,7 +158,7 @@ array(
 		}
 		return $res2;
 	}
-	
+
 	/// query returning a column
 	/**
 	See class note for input
@@ -173,7 +173,7 @@ array(
 		}
 		return $res2;
 	}
-	
+
 	/// query returning columns keyed their numeric position
 	/**
 	See class note for input
@@ -198,14 +198,14 @@ array(
 		$sql .= "\nLIMIT 1";
 		return $this->query($sql)->fetch(PDO::FETCH_NUM);
 	}
-	
-	
+
+
 	/// query returning a column with keys
 	/**See class note for input
 	@param	key	the column key to be used for each element.	If they key is an array, the first array element is taken as the key, the second is taken as the mapped value column
 	@return	array where one column serves as a key pointing to either another column or another set of columns
 	*/
-	
+
 	protected function columnKey($key,$sql){
 		$arguments = func_get_args();
 		array_shift($arguments);
@@ -216,7 +216,7 @@ array(
 			return Arrays::subsOnKey($rows,$key);
 		}
 	}
-	
+
 	///Key to value formatter (used for where clauses and updates)
 	/**
 	@param	kvA	various special syntax is applied:
@@ -226,7 +226,7 @@ array(
 		if "?" is in the key, the part after the "?" will serve as the "equator", ("bob?<>"=>'sue') -> "bob <> 'sue'"
 		if key starts with ":", value is not escaped
 			if value is null, set string to "null"
-			if value is string "null", where is prefixed with "is".	
+			if value is string "null", where is prefixed with "is".
 		if value = null, set value to unescaped "null"
 	@param	type	1 = where, 2 = update
 	*/
@@ -241,7 +241,7 @@ array(
 	}
 	///Field to value formatter (used for where clauses and updates)
 	protected function ftvf($field,$value,$type=1){
-		if($field[0]=='"'){//quote v exactly (don't escape), 
+		if($field[0]=='"'){//quote v exactly (don't escape),
 			return $value;
 		}elseif(is_int($field)){//the key is auto-generated, don't quote
 			return $value;
@@ -259,7 +259,7 @@ array(
 			}else{
 				$equator = '=';
 			}
-			
+
 			if($field[0]==':'){
 				$field = substr($field,1);
 				if($value == 'null' || $value === null){
@@ -280,7 +280,7 @@ array(
 			return $field.' '.$equator.' '.$value;
 		}
 	}
-	
+
 	///so as to prevent the column, or the table prefix from be mistaken by db as db construct, quote the column
 	function quoteIdentity($identity,$separation=true){
 		$identity = '"'.$identity.'"';
@@ -326,7 +326,7 @@ array(
 		}
 		Db::query($command.' INTO '.$this->quoteIdentity($table).' ('.implode(',',$keys).")\t\nVALUES ".implode(',',$insertRows));
 	}
-	
+
 	/// Key value parser
 	protected function kvp($kvA){
 		foreach($kvA as $k=>$v){
@@ -345,7 +345,7 @@ array(
 		}
 		return array($keys,$values);
 	}
-	
+
 	/// Key value formatter (used for insert like statements)
 	/**
 	@param	kva	array('key' => 'value',...)	special syntax is applied:
@@ -358,7 +358,7 @@ array(
 		return ' ('.implode(',',$keys).")\t\nVALUES (".implode(',',$values).') ';
 	}
 
-	
+
 	/// Insert into a table
 	/**
 	@param	table	table to insert on
@@ -439,7 +439,7 @@ array(
 		$res = $this->query('UPDATE '.$this->quoteIdentity($table).' SET '.$vf.$this->where($where));
 		return $res->rowCount();
 	}
-	
+
 	/// perform delete
 	/**
 	@param	table	table to replace on
@@ -453,10 +453,10 @@ array(
 		}
 		return $this->query('DELETE FROM '.$this->quoteIdentity($table).$this->where($where))->rowCount();
 	}
-	
+
 	///generate sql
 	/**
-	Ex: 
+	Ex:
 		- row('select * from user where id = 20') vs row('user',20);
 		- rows('select name from user where id > 20') vs sRows('user',array('id?>'=>20),'name')
 	@param	from	table, array of tables, or from statement
@@ -468,6 +468,9 @@ array(
 	@note	this function is just designed for simple queries
 	*/
 	protected function select($from,$where=null,$columns='*',$order=null,$limit=null){
+		if(!$columns){
+			$columns = '*';
+		}
 		if(is_array($from)){
 			$from = '"'.implode('", "',$from).'"';
 		}elseif(strpos($from,' ') === false){//ensure no space; don't quote a from statement
@@ -506,7 +509,7 @@ array(
 		$sql = $this->select($table,$where,'1');
 		return $this->row($sql) ? true : false;
 	}
-	
+
 	///get the id of some row, or make it if the row doesn't exist
 	/**
 	@param	additional	additional fields to merge with where on insert
@@ -522,7 +525,7 @@ array(
 		}
 		return $id;
 	}
-	
+
 	///get id based on name if non-int, otherwise return int
 	/**
 		@param	dict	dictionary to update on query
@@ -537,7 +540,7 @@ array(
 		}
 		return $id;
 	}
-	
+
 	/// perform a count and select rows; doesn't work with all sql
 	/**
 	Must have "ORDER" on separate and single line
@@ -553,14 +556,14 @@ array(
 			$limit = $match[1];
 			$countSql = preg_replace($limitRegex,'',$countSql);
 		}
-		
+
 		//order must be on single line or this will not work
 		$orderRegex = '@\sORDER BY[\t ]+([^\n]+)\s*$@i';
 		if(preg_match($orderRegex,$countSql,$match)){
 			$order = $match[1];
 			$countSql = preg_replace($orderRegex,'',$countSql);
 		}
-		
+
 		$countSql = array_pop(preg_split('@[\s]FROM[\s]@i',$countSql,2));
 		if($countLimit){
 			$countSql = "SELECT COUNT(*)\n FROM (\nSELECT 1 FROM \n".$countSql."\nLIMIT ".$countLimit.') t ';
@@ -586,7 +589,7 @@ array(
 			return $this->column('show tables');
 		}
 	}
-	
+
 	public $tablesInfo = [];
 	//get database table column information
 	protected function tableInfo($table){
@@ -606,7 +609,7 @@ array(
 					$column['key'] = $row['Key'] == 'PRI' ? 'primary' : $row['Key'];
 				}
 				//++ }
-				
+
 				//++ get the unique keys info {
 				$rows = $this->rows('show index in '.$this->quoteIdentity($table));
 				foreach($rows as $row){

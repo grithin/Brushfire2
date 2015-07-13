@@ -237,7 +237,7 @@ class Control{
 		//++ }
 		
 		//hooks such as converting fields to strings, or adding a CSRF token validater rule
-		Hook::runWithReferences('preValidate',$rules,$env,$options);
+		Hook::run('preValidate',$rules,$env,$options);
 		
 		//set to allow validater callbacks to use the context of the other fields
 		self::$validationFields = &$env['in'];

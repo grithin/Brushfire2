@@ -4,15 +4,15 @@
 On the nature of templates
 	. they should contain minimal logic, leaving most to control and tools
 
-@note	although there is only expected to be one View instance per page, to 
- 
-	
+@note	although there is only expected to be one View instance per page, to
+
+
 */
 class View{
 	static $baseUrl;
 	static $common = [];///< array of common view variables, like title, keywords, etc
 	static $aliases;///< the aliases used when getting templates
-	
+
 	static function init(){
 		self::$baseUrl = '//'.$_ENV['httpHost'].'/';
 	}
@@ -33,7 +33,8 @@ class View{
 			Cache::set('view.aliases',self::$aliases);
 		}
 	}
-	
+	///keyed to local variable  withinside template as 'local'
+	static $localVars = [];
 	///used to get the content of a single template file
 	/**
 	@param	template	string path to template file relative to the templateFolder.  .php is appended to this path.
@@ -42,6 +43,9 @@ class View{
 	*/
 	static protected function getTemplate($template,$vars=null){
 		$vars['thisTemplate'] = $template;
+		if(self::$localVars){
+			$vars['local'] = self::$localVars;
+		}
 
 		ob_start();
 		if(substr($template,-4) != '.php'){
@@ -51,30 +55,30 @@ class View{
 		$output = ob_get_clean();
 		return $output;
 	}
-	
+
 	static $showArgs;
 	///used as the primary method to show a collection of templates.  @attention parameters are the same as the View::get function
 	static protected function show(){
 		self::$showArgs = func_get_args();
-		Hook::runWithReferences('viewPreShow',self::$showArgs);
+		Hook::run('viewPreShow',self::$showArgs);
 		$output = call_user_func_array(array('self','get'),self::$showArgs);
-		Hook::runWithReferences('viewPostShow',$output,self::$showArgs);
+		Hook::run('viewPostShow',$output,self::$showArgs);
 		Hook::run('preHTTPMessageBody');
 		echo $output['combine'];
 	}
-	
+
 	///calls show then dies
 	static protected function end(){
 		call_user_func_array(array('self','show'),func_get_args());
 		exit;
 	}
-	
+
 	///used to get a collection of templates without displaying them
 	/**
 	@param	templates	the input or output form of View::parseTemplateString
-		
-		where subtemplates is the passed into get as $templates. 
-		
+
+		where subtemplates is the passed into get as $templates.
+
 		 In the case of subtemplates, named ouput of each subtemplate along with the total previous output of the subtemplates is passed to the supertemplate.  The output of each subtemplate is passed by name in a $templates array, and the total output is available under the variable $input.
 	@return output from the templates
 	*/
@@ -107,23 +111,23 @@ class View{
 			}
 			$return['combine'] .= $output;
 		}
-		
+
 		return $return;
 	}
-	
-	
+
+
 	/**
 		handling examples
 			@current:
 				1: ['@current']
 				2: ['@standard',null,'!current']
 				3: ['@standard',null,'currentPage']
-				
+
 				bare,,page,,,!children
-				
+
 				4: ['@standard',null,'currentPage']
-		
-		
+
+
 		3 forms acceptable.
 
 		Multiline:
@@ -133,20 +137,20 @@ class View{
 						subsubtemplate
 						subsubtemplate
 				template';
-						
+
 		Single line:
 			$templateString = 'template		subtemplate			subsubtemplate			subsubtemplate	template';
 			#$templateString = 'template,,subtemplate,,,subsubtemplate,,,subsubtemplate,template';
-		
+
 		template forms
-			normal form 
+			normal form
 				form: "file[:name]"
 				Ex: blog/read
 				Ex: blog/read:ViewBlog
-				
+
 				file is file path relative to templates directory base, excluding .php
 				name is alphanumeric
-		
+
 			special form !real
 				loads based on real path (not internal redirect)
 			special form !current
@@ -155,9 +159,9 @@ class View{
 				applies all following templates as subtemplates to previous template
 			special form prefix @
 				Used to represent an alias, though not parsed in this function.  Aliases are defined in View::aliases
-		
-		@return	
-		
+
+		@return
+
 		-	array with each element being a template
 		-	an array of structured template arrays:
 		@verbatim
@@ -189,11 +193,11 @@ array(
 
 		$templates = explode("\n",$templateString);
 		$array = self::generateTemplatesArray($templates);
-		
+
 		#replace !current with current control to template location
 		$array = Arrays::replaceAll('!current',implode('/',\control\Route::$parsedTokens),$array);
 		$array = Arrays::replaceAll('!real',implode('/',\control\Route::$realTokens),$array);
-		
+
 		#set !children to work with parseAliases
 		#$array = Arrays::replaceAllParents('!children','!children',$array,2);
 		return $array;
@@ -207,7 +211,7 @@ array(
 			preg_match('@(\t*)([^\t]+$)@',$template,$match);
 			$templateDepth = strlen($match[1]);
 			$templateId = $match[2];
-			
+
 			#indicates sub templates, so add sub templates
 			if($templateDepth > $depth){
 				#add subtemplates to previous template
@@ -248,7 +252,7 @@ array(
 			}
 		}
 		unset($tree);
-		
+
 		return $array;
 	}
 	/// !children from aliases results in following tree being put into the !children
@@ -273,16 +277,16 @@ array(
 		if(!is_array($tree)){
 			$tree = self::parseTemplateString($tree);
 		}
-		
+
 		if($children){
 			$tree = Arrays::replaceAll('!children',$children,$tree);
 		}
-		
+
 		return $tree;
 	}
-	
+
 //+	css & js resource handling {
-	
+
 	///page css
 	static $css = array();
 	///page css put at the end after self::$css
@@ -312,17 +316,17 @@ array(
 	*/
 	static protected function addTags($type,$paths){
 		$paths = (array)$paths;
-		
+
 		//handle order prefix
 		if(in_array(substr($type,0,1),array('-','+'))){
 			$originalTagAddOrder = $tagAddOrder;
 			$tagAddOrder = substr($type,0,1);
 			$type = substr($type,1);
 		}
-		
+
 		//handle alias
 		$type = $type == 'js' ? 'bottomJs' : $type;
-		
+
 		if(in_array($type,array('css','lastCss'))){
 			$uniqueIn = array('css','lastCss');
 			$folder = 'css';
@@ -330,7 +334,7 @@ array(
 			$uniqueIn = array('topJs','bottomJs','lastJs');
 			$folder = 'js';
 		}
-		
+
 		if($paths){
 			if($tagAddOrder == '-'){
 				krsort($paths);
@@ -342,7 +346,7 @@ array(
 					$key = $file[0];
 					$file = $file[1];
 				}
-				
+
 				if(substr($file,0,7) == ('inline:')){
 					$typeTags[] = $file;
 				}else{
@@ -413,7 +417,7 @@ array(
 		}
 		return implode("\n",$js);
 	}
-	
+
 	///	Outputs js script tags with self::$topJs
 	/**
 	@param	urlQuery	array	key=value array to add to the url query part; potentially used to force browser to refresh cached resources
@@ -424,7 +428,7 @@ array(
 		}
 		return $js;
 	}
-	
+
 	///	Outputs js script tags with self::$bottomJs and self::$lastJs
 	/**
 	@param	urlQuery	array	key=value array to add to the url query part; potentially used to force browser to refresh cached resources
@@ -449,7 +453,7 @@ array(
 		if section open, place output into keyed array, close section, and then open new section
 	if called without name
 		if section open, put output into keyed array, close section
-	
+
 	@note If section already exists, will overwrite
 	*/
 	static protected function section($name=''){
@@ -474,7 +478,7 @@ array(
 		}
 		return self::$sections[$name];
 	}
-//+	}	
+//+	}
 	///standard js object that gets turned into json for pages, ajax, or api.  Various information loaded into it on calling this
 	static $json = null;
 	static $mappedKeys = ['messages','id','status','value'];
@@ -486,14 +490,14 @@ array(
 			}
 			self::$json['route']['parsed'] = \control\Route::$parsedTokens;
 		}
-		
+
 		foreach(self::$mappedKeys as $key){
 			if(!self::$json[$key]){
 				self::$json[$key] = Control::$$key;
 			}
 		}
 		self::$json['timezone'] = \User::timezone();
-		
+
 		Hook::run('stdJson');
 		return Tool::json_encode(self::$json);
 	}
@@ -519,7 +523,7 @@ array(
 		}
 		exit;
 	}
-	
+
 	//it appears the browser parses once, then operating system, leading to the need to double escape the file name.  Use double quotes to encapsulate name
 	static function escapeFilename($name){
 		return Tool::slashEscape(Tool::slashEscape($name));
@@ -530,7 +534,7 @@ array(
 		$path = Files::removeRelative($path);
 		if(is_file($path)){
 			$mime = Files::mime($path);
-			
+
 			header('Content-Type: '.$mime);
 			if($saveAs){
 				header('Content-Description: File Transfer');
@@ -541,7 +545,7 @@ array(
 				}
 				header('Content-Disposition: attachment; filename="'.self::escapeFilename($fileName).'"');
 			}
-			
+
 			echo file_get_contents($path);
 		}elseif($_ENV['resourceNotFound']){
 			Config::loadUserFiles($_ENV['resourceNotFound'],'control');

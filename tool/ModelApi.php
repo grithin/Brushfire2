@@ -13,7 +13,12 @@ readOne:
 */
 class ModelApi{
 	static $table;
-	function standardHandling($allowed=[],$options){
+	/**
+	@rv	in	the input array
+	@param	options	{in:@in,
+		type:<string><<operation>>,}
+	*/
+	function standardHandling($allowed=[],$options=[]){
 		//++ handle defaults {
 		if(!isset($options['in'])){
 			$in = &Control::$in;
@@ -21,7 +26,7 @@ class ModelApi{
 			$in = &$options['in'];
 		}
 		//++ }
-		
+
 		$in['type'] = $in['type'] ? $in['type'] : 'readOne';
 		$table = $options['table'] ? $options['table'] : end(\control\Route::$parsedTokens);
 
@@ -64,6 +69,7 @@ class ModelApi{
 				\Control::error('No matched _type');
 			break;
 		}
+		\Hook::run('ModelApi::standardHandling:post',$in,$options);
 		\View::endStdJson();
 	}
 	function deleteMany($scope,$options=[]){
@@ -280,9 +286,10 @@ class ModelApi{
 			$upsert['created'] = new Time('now',$_ENV['timezone']);
 		}
 
-		if($options['createCallback']){
-			return call_user_func_array($options['createCallback'],[&$upsert,&$options]);
-		}
+		$returns = \Hook::run('ModelApi::doCreate:pre',$upsert,$options);
+		if($returns){
+			return array_pop($returns);	}
+
 		if($options['subtype']){
 			if($options['subtype'] == 'ignore'){
 				//even though there is a return on ignore flag, the fields causing a collision can be set after that flag return
@@ -294,6 +301,7 @@ class ModelApi{
 			}
 		}
 		$options['id'] = \Db::insert($options['scope'],$upsert);
+		\Hook::run('ModelApi::doCreate:post',$upsert,$options);
 		return $options;
 	}
 
@@ -305,10 +313,13 @@ class ModelApi{
 		if(\Control::$model[$options['scope']]['columns']['updated']){
 			$upsert['updated'] = new Time('now',$_ENV['timezone']);
 		}
-		if($options['updateCallback']){
-			return call_user_func_array($options['updateCallback'],[&$upsert,&$options]);
-		}
+
+		$returns = \Hook::run('ModelApi::doUpdate:pre',$upsert,$options);
+		if($returns){
+			return array_pop($returns);	}
+
 		Db::update($options['scope'],$upsert,Arrays::extract($options['matchedKeys'][$options['lastMatchedKey']],$options['in']));
+		\Hook::run('ModelApi::doUpdate:post',$upsert,$options);
 		return $options;
 	}
 
