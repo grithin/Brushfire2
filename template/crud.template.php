@@ -20,9 +20,3 @@
 <div id="typeContent" class="row"></div>
 
 <div id="pagingControl"></div>
-
-<script>
-	$(function(){
-		crud = new bf.crud()
-	})
-</script>

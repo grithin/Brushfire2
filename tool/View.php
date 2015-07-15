@@ -20,6 +20,9 @@ class View{
 		if(!self::$loaded){
 			self::load();
 		}
+		if(!method_exists(__CLASS__,$fn)){
+			Debug::toss('No such method "'.$fn.'" on '.__CLASS__);
+		}
 		return call_user_func_array(array('self',$fn),$args);
 	}
 	static $loaded = false;

@@ -8,17 +8,17 @@ Route Rules Logic
 	All routes are optional
 	Routes are discovered one level at a time, and previous routing rules affect the discovery of new routes
 	if a matching rule is found, the Route rules loop starts over with the new path (unless option set to not do this)
-	
+
 	http://bobery.com/bob/bill/sue:
 		control/routes.php
 		control/bob/routes.php
 		control/bob/bill/routes.php
 		control/bob/bill/sue/routes.php
-		
+
 
 Controls Calling Logic:
 	All controls are optional.  However, if the Route is still looping tokens (stop it by exiting or emptying $unparsedTokens) and the last token does not match a control, page not found returned
-	
+
 	http://bobery.com/bob/bill/sue:
 		control/control.php
 		control/bob.php || control/bob/control.php
@@ -43,29 +43,29 @@ class Route{
 	///parses url, routes it, then calls off all the control until no more or told to stop
 	static function handle($uri){
 		self::parseRequest($uri);
-		
+
 		//url corresponds to public file directory, provide file
 		if(self::$tokens[0] == $_ENV['urlProjectFileToken']){
 			self::sendFile($_ENV['instancePublicFolder']);
 		}elseif(self::$tokens[0] == $_ENV['urlSystemFileToken']){
 			self::sendFile($_ENV['systemPublicFolder']);
 		}
-		
+
 		self::routeRequest();
-	
+
 //+	load controls and section page{
-	
+
 		\Control::init();//we are now in the realm of dynamic pages
 		\View::init(); //most pages on this web framework use the view
-		
+
 		//after this following line, self::$tokens has no more influence on routing.  Modify self::$unparsedTokens if you want modify control flow
 		self::$unparsedTokens = self::$tokens;//blank token loads in control
-		
+
 		self::addLocalTool($_ENV['projectFolder'].'tool/local/');
-		
+
 		//control files included variables
 		$incVars = self::$regexMatch;
-		
+
 		//get the section and page control
 		if(is_file($_ENV['controlFolder'].'control.php')){
 			include($_ENV['controlFolder'].'control.php');
@@ -75,7 +75,7 @@ class Route{
 			self::$currentToken = array_shift(self::$unparsedTokens);
 			if(self::$currentToken){//ignore blank tokens
 				self::$parsedTokens[] = self::$currentToken;
-				
+
 				//++ load the control {
 				$path = $_ENV['controlFolder'].implode('/',self::$parsedTokens);
 				//if named file, load, otherwise load generic control in directory
@@ -128,13 +128,13 @@ class Route{
 	private static function parseRequest($uri){
 		self::$realTokens = explode('?',$uri,2);
 		self::tokenise(self::$realTokens[0]);
-		
+
 		//urldecode tokens.  Note, this can make some things relying on domain path info for file path info insecure
 		foreach(self::$tokens as &$token){
 			$token = urldecode($token);
 		}
 		unset($token);
-		
+
 		//Potentially, the tokens will change according to routes, but the real ones may be referenced
 		self::$realTokens = self::$tokens;
 	}
@@ -168,14 +168,14 @@ class Route{
 			if(!isset($rule['flags'])){
 				$flags = $rule[2] ? explode(',',$rule[2]) : array();
 				$rule['flags'] = array_fill_keys(array_values($flags),true);
-			
+
 				//parse flags for determining match string
 				if($rule['flags']['regex']){
 					$rule['matcher'] = \Tool::pregDelimit($rule[0]);
 					if($rule['flags']['caseless']){
 						$rule['matcher'] .= 'i';
 					}
-					
+
 				}else{
 					if($rule['flags']['caseless']){
 						$rule['matcher'] = strtolower($rule[0]);
@@ -184,13 +184,13 @@ class Route{
 					}
 				}
 			}
-			
+
 			if($rule['flags']['caseless']){
 				$subject = self::$caselessPath;
 			}else{
 				$subject = self::$path;
 			}
-			
+
 			//test match
 			if($rule['flags']['regex']){
 				if(preg_match($rule['matcher'],$subject,self::$regexMatch)){
@@ -201,7 +201,7 @@ class Route{
 					$matched = true;
 				}
 			}
-			
+
 			if($matched){
 				self::$matchedRules[] = $rule;
 				//++ apply replacement logic {
@@ -219,24 +219,31 @@ class Route{
 						$replacement = $rule[1];
 					}
 				}
-				
+
 				//handle redirects
 				if($rule['flags'][301]){
-					\Http::redirect($replacement,'head',301);
+					$httpRedirect = 301;
 				}
 				if($rule['flags'][303]){
-					\Http::redirect($replacement,'head',303);
+					$httpRedirect = 303;
 				}
 				if($rule['flags'][307]){
-					\Http::redirect($replacement,'head',307);
+					$httpRedirect = 307;
 				}
-			
+				if($httpRedirect){
+					if($rule['flags']['params']){
+						$replacement = \Http::appendsUrl(\Http::parseQuery($_SERVER['QUERY_STRING']),$replacement);
+					}
+					\Http::redirect($replacement,'head',$httpRedirect);
+				}
+
+
 				//remake url with replacement
 				self::tokenise($replacement);
 				self::$parsedTokens = [];
 				self::$unparsedTokens = array_merge([''],self::$tokens);
 				//++ }
-				
+
 				//++ apply parse flag {
 				if($rule['flags']['once']){
 					unset($rules[$ruleKey]);
@@ -246,26 +253,26 @@ class Route{
 					self::$unparsedTokens = [];
 				}
 				//++ }
-				
+
 				return true;
 			}
 		} unset($rule);
 
 		return false;
 	}
-	
+
 	static $ruleSets;///<files containing rules that have been included
-	
+
 	///internal use. Gets files and then applies rules for routing
 	private static function routeRequest(){
 		self::$unparsedTokens = array_merge([''],self::$tokens);
-		
+
 		while(self::$unparsedTokens && !self::$stopRouting){
 			self::$currentToken = array_shift(self::$unparsedTokens);
 			if(self::$currentToken){
 				self::$parsedTokens[] = self::$currentToken;
 			}
-			
+
 			$path = $_ENV['controlFolder'].implode('/',self::$parsedTokens);
 			if(!isset(self::$ruleSets[$path])){
 				self::$ruleSets[$path] = (array)\Files::inc($path.'/routes.php',null,null,['rules'])['rules'];
@@ -276,7 +283,7 @@ class Route{
 			//note, on match, matehRules resets unparsedTokens (having the effect of loopiing matchRules over again)
 			self::matchRules($path,self::$ruleSets[$path]);
 		}
-		
+
 		self::$parsedTokens = [];
 	}
 	///internal use. Gets a file based on next token in the unparsedTokens variable
