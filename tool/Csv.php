@@ -10,15 +10,15 @@ Use Example:
 		while($line = $csv->fgets()){
 			$columns = Csv::getMappedColumns($line,$positions);
 		}
-	
+
 	instancely
 		$csv = new Csv(FILEPATH or TEXT,$delimiter);
 		$csv->map(array('destinationColumnName' => 'searchedForColumnName'))
 		while($columns = $csv->mGet()){
-			
+
 		}
-	
-	
+
+
 */
 
 class Csv{
@@ -49,8 +49,15 @@ class Csv{
 			return self::getMappedColumns($line,$this->positions,$this->delimiters);
 		}
 	}
-	
-	
+	static function make($target,$items){
+		$target = fopen($target,'a+');
+		$header = array_keys($items[0]);
+		fputcsv($target,$header);
+		foreach($items as $item){
+			fputcsv($target,$item);
+		}
+	}
+
 	///maps the position of source columns with names equal to or similar to search columns to destination columns
 	/**
 	@param	source	array(position => columnName)
@@ -97,12 +104,12 @@ class Csv{
 	@param	string	the string representing the line in the csv
 	@param	delimiterCharacters those which delimit
 	@return	array(position => value)
-	
+
 	@note doesn't handle  quoted double quotes.   CSV quotes '"' by replacing with '"""'
 	*/
 	static function parseLineColumns($string,$delimiterCharacters=",\t"){
 		$charCount = strlen($string);
-		
+
 		$delimiterCharacters = str_split($delimiterCharacters);
 		$delimiters = array();
 		foreach($delimiterCharacters as $char){
@@ -134,10 +141,10 @@ class Csv{
 				$startField = true;
 				continue;
 			}
-			
+
 			//part of field
 			$fields[$f] .= $string[$i];
-			
+
 			$startField = false;
 		}
 		return $fields;

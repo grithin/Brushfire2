@@ -41,7 +41,7 @@ class WebData{
 				'@[^a-z]My [a-z]@i',
 				'@[ >]Scoop Interactive[< ]@i',
 			);
-		
+
 		foreach($matches as $match){
 			if(preg_match($match,$html)){
 				return true;
@@ -54,9 +54,9 @@ class WebData{
 	///pack post array with asp validation variables based on previously loaded page
 	static function aspParseInto($html,$array){
 		list($dom,$xpath) = DomTools::loadHtml($html);
-		
+
 		//look for even validation
-		
+
 		$nodes = $xpath->query('//input[@name=\'__VIEWSTATE\']');
 		if($nodes->length){
 			$array['__VIEWSTATE'] = $nodes->item(0)->getAttribute('value');
@@ -73,14 +73,22 @@ class WebData{
 		if($nodes->length){
 			$array['__EVENTVALIDATION'] = $nodes->item(0)->getAttribute('value');
 		}
-		
+
 		//optional stuff
 		$vsKeyInput = $xpath->query('//input[@name=\'__vsKey\']')->item(0);
 		if($vsKeyInput){
 			$array['__vsKey'] = $vsKeyInput->getAttribute('value');
 		}
-		
+
 		return $array;
+	}
+	/**asp wraps their json responses
+	window.S143705548504019160124832()
+	*/
+	static function aspParseJson($text){
+		#preg_match('@\(@i',$text,$match);
+		preg_match('@^.*?\(([\s\S]*)\)\s*$@i',$text,$match);
+		return json_decode($match[1],true);
 	}
 	static $conversionRates = array();
 	static function getConversionRates(){
@@ -97,7 +105,7 @@ class WebData{
 			}
 		}
 	}
-	
+
 	static function convert($amount,$from){
 		if(!self::$conversionRates){
 			self::getConversionRates();
@@ -117,7 +125,7 @@ class WebData{
 		if(!$convert){
 			$convert = self::getCurrency($amount);
 		}
-		
+
 		$amount = preg_replace('@[^0-9\.]@','',$amount);
 		if($convert){
 			$amount = self::convert($amount,$convert);

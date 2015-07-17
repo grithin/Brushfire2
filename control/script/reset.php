@@ -1,5 +1,6 @@
 <?
 ///put following into a control file and run it
+///@important	if you don't manually set the  $_ENV['httpHost'], the script run will not know what host to use and cache prefix will  not match a site
 
 //remake model
 if(\Control::$db){

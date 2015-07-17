@@ -31,7 +31,7 @@ class View{
 		if(!(self::$aliases = Cache::get('view.aliases'))){
 			foreach($_ENV['view.aliasesFiles'] as $file){
 				$extract = Files::inc($file,null,null,array('aliases'));
-				self::$aliases = Arrays::merge(self::$aliases,$extract['aliases']);
+				self::$aliases = Arrays::indexMerge(self::$aliases,$extract['aliases']);
 			}
 			Cache::set('view.aliases',self::$aliases);
 		}

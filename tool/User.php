@@ -17,14 +17,14 @@ class User{
 	static function init($db=null){
 		self::$id = $_SESSION['user.id'];
 		self::$db = $db ? $db : \Db::primary();
-		
+
 		if($_ENV['user.log'] || self::$db->tableExists('user_log_action')){
 			\user\Log::init(self::$id,$this);
 		}
 		if(class_exists('\View',false)){
 			\View::$json['user_id'] = self::$id;
 		}
-		
+
 		if(!$_ENV['user.signinUrl']){
 			$_ENV['user.signinUrl'] = '/user/signin';
 		}
@@ -37,12 +37,12 @@ class User{
 		if($name){
 			$_SESSION['user.name'] = $name;
 		}
-		
+
 		if($_COOKIE['desiredUrl']){
 			View::$json['redirect'] =  $_COOKIE['desiredUrl'];
 			Cookie::remove('desiredUrl');
 		}
-		
+
 		\Hook::run('userAction','signin');
 	}
 	static function signout(){
@@ -62,7 +62,6 @@ class User{
 				return;
 			}
 			$_SESSION['timezone'] = $timezone;
-			Debug::log($_SESSION);
 		}
 	}
 	static function id(){
@@ -84,7 +83,7 @@ class User{
 		//salt makes hash dictionaries more difficult
 		return sha1($password.$salt);
 	}
-	
+
 //+	basic user and group permission handling{
 	static function isAdmin(){
 		if(isset($_SESSION['isAdmin'])){
@@ -120,12 +119,12 @@ class User{
 		$userId = $userId ? $userId : User::id();
 		if(!$userId){
 			return false;	}
-		
+
 		//permission can be given as either the id or the name
 		if(!Tool::isInt($permission)){
 			$permission = self::getPermission($permission);
 		}
-		
+
 		if(!isset(self::$userPermissions[$userId][$permission])){
 			$groups = self::getUserGroups($userId);
 			if($groups){

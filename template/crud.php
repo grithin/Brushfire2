@@ -23,6 +23,7 @@
 
 <script>
 	$(function(){
-		crud = new bf.crud()
+		var crud = new bf.crud()
+		crud.modelPromise.then(crud.updateType.bind(crud))
 	})
 </script>

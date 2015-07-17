@@ -46,7 +46,23 @@ Function.prototype.arg = function() {
 		};
 	partial.prototype = Object.create(this.prototype);
 	return partial;
-};
+}
+///return an object where "this" is the prototype and available in property "parent"
+/**
+Used in cases where you want to override the constructed object props and methods, but, still want access to them as this.prototype...
+*/
+Function.prototype.inherit = function(){
+	this.apply(this, arguments)
+	var that = this
+	//The prototype property of an object is used when creating new child objects of that object. Changing it does not reflect in the object itself, rather is reflected when that objected is used as a constructor for other objects, and has no use in changing the prototype of an existing object.
+	generic = function(){}
+	generic.prototype = this
+
+	var child = new generic()
+	//instead of local calls to Object.getPrototypeOf(this)
+	child.parent = this
+	return child
+}
 ///escape special characters from a string for regex
 RegExp.quote = function(str) {
 	return (str+'').replace(/([.?*+^$[\]\\(){}|-])/g, "\\$1");
@@ -97,15 +113,25 @@ $.file = function(options,fileInputs){
 	//jquery doesn't handle setting boundary, so use basic javascript
 	options.url = options.url || window.location
 	var xhr = new XMLHttpRequest();
+
+	var deferred = Q.defer()
 	if(options.progress){
 		xhr.upload.addEventListener('progress',options.progress,false)
 	}
-	if(options.success){
-		xhr.addEventListener('load',function(e){
-			options.success(JSON.parse(e.target.responseText))
-		},false)
-	}
-	if(options.error){
+
+	xhr.addEventListener('load',function(e){
+		if(options.success){
+			options.success(JSON.parse(e.target.responseText))	}
+		deferred.resolve(e)
+	},false)
+
+	xhr.addEventListener('error',function(e){
+		if(options.error){
+			options.error(e)	}
+		deferred.reject(e)
+	},false)
+
+	if(options.progress){
 		xhr.addEventListener('error',options.progress,false)
 	}
 
@@ -114,8 +140,10 @@ $.file = function(options,fileInputs){
 
 	//xhr.setRequestHeader("X_FILENAME", file.name);
 
-	return xhr
+	return deferrer.promise
 }
+
+
 //apply fn to each ele matching selector (good for using bound arguments for later calls using bf.run)
 /**
 var update = $.eachApply.arg('[data-redirect]',bf.view.ele.redirect)
@@ -1212,7 +1240,6 @@ bf.view.form.data = function(form){
 ///make a form out of the fields and values provided
 bf.view.form.model = function(options){
 	options = options || {}
-
 	if(!options.fieldNames){
 		if(!options.scope){
 			throw 'No field names and no scope on makeModelForm call'
@@ -1394,7 +1421,7 @@ bf.view.form.getLine = function(field,value,options){
 @param	options	{
 	success: see bf.view.form.response,
 	url: url to post to,
-	csrf: whether to add in a csrf token}
+	csrf: whether to add in a csrf token,
 @note it is expected that all ajax responses will conform to having a 'status' attribute, and so ajaxFormResponse is used
 */
 bf.view.form.submit = function(options){
@@ -1410,15 +1437,15 @@ bf.view.form.submit = function(options){
 		}else{
 			$.json({success:success,data:data,url:options.url})
 		}
-		return false
 	}
 	if(options.csrf){
 		bf.view.form.getCsrf(function(csrf){
 			form.append($('<input type="hidden" name="_csrfToken"/>').val(csrf))
 			doPost()		})
 	}else{
-		return doPost()
+		doPost()
 	}
+	return false;
 }
 
 ///submit multiple forms using json post (no files)

@@ -1,8 +1,8 @@
 <?
 ///for use by system in things such as combined log
-$_ENV['projectName'] = 'BrushFire Project Name';
+$_ENV['projectName'] = $_ENV['projectName'] ? $_ENV['projectName'] : 'BrushFire Project Name';
 ///@note $_SERVER['HTTP_HOST'] is dependent upon request HTTP headers.  These can be fabricated (ex, mod /etc/hosts).  Consequently, it is wise to overwrite this default with manually entered domain
-$_ENV['httpHost'] = $_SERVER['HTTP_HOST'];
+$_ENV['httpHost'] = $_ENV['httpHost'] ? $_ENV['httpHost'] : $_SERVER['HTTP_HOST'];
 
 //+	Path configs{
 //where the framework lies on your system
@@ -39,9 +39,6 @@ $_ENV['pageNotFound'] = '404page.php';
 ///what file to call when resource was not found; relative to instance/control/
 #$_ENV['resourceNotFound'] = '404page.php';
 $_ENV['resourceNotFound'] = '';
-///file to use for directory index page
-/**when the Route is at the end of a path and hasn't called a control with a page name, it will see if this file exists within the last directory and try to load it.  If this config equates to false, the Route will not use any index page*/
-$_ENV['useIndex'] = 'index.php';
 ///the starting url path token that indicates that the system should look in the project public directory
 $_ENV['urlProjectFileToken'] = 'public';
 ///the starting url path token that indicates that the system should look in the system public directory
@@ -92,7 +89,7 @@ ini_set('session.gc_divisor', 100);
 //+	Caching {
 ///connection array
 #$_ENV['cache.default'] = ['type'=>'memcache','connection'=>['127.0.0.1','11211'],'prefix'=>$_ENV['httpHost']];
-$_ENV['cache.default'] = ['type'=>'redis','connection'=>['127.0.0.1',6379, 1, NULL, 100],'prefix'=>$_ENV['httpHost']];
+$_ENV['cache.default'] = ['type'=>'redis','connection'=>['127.0.0.1',6379, 1, NULL, 100],'prefix'=>$_ENV['httpHost'].'.'];
 ///db of cache to connect to, if any
 //$_ENV['cache.db']
 //+ }
@@ -152,15 +149,3 @@ $_ENV['loadBalancerIps'] = array();
 
 $_ENV['startTime'] = microtime(true);
 //+	}
-
-
-//+ modules {
-//+		user {
-///Whether to apply user logging functions
-$_ENV['module']['user']['logging'] = false;
-///path to user home
-$_ENV['module']['user']['home'] = '/user/';
-///password salt
-$_ENV['module']['user']['passwordSalt'] = 'defaultSalt';
-//+		}
-//+ }

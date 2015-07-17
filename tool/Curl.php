@@ -28,9 +28,9 @@ class Curl{
 	public $deleteCookie = true;///<option of whether to delete cookie on curl object destruction
 	static $defaultErrorHandler = null;///across all instances
 	public $errorHandler = null;
-	
+
 	public $request = null;
-	
+
 	public $headerGroups = [
 		'default'=>[/*'Content-Type'=>'application/x-www-form-urlencoded',*/],
 		'json'=>['Content-Type'=>'application/json',]];
@@ -51,7 +51,7 @@ class Curl{
 	public function __construct(){
 		$this->user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'Curl/PHP '.PHP_VERSION;
 		$this->cookie_file = '/tmp/curl.'.str_replace(' ','_',microtime());
-		
+
 		//remove this unwanted header which is set by default by curl
 		$this->headers['Expect'] = '';
 	}
@@ -60,7 +60,7 @@ class Curl{
 			@unlink($this->cookie_file);
 		}
 	}
-	
+
 	public function delete($url, $vars = array()){
 		return $this->request('DELETE', $this->create_get_url($url, $vars));
 	}
@@ -80,7 +80,7 @@ class Curl{
 		}
 		return $url;
 	}
-	
+
 	public function head($url, $vars = array()){
 		return $this->request('HEAD', $this->create_get_url($url, $vars));
 	}
@@ -106,12 +106,14 @@ class Curl{
 	curl library fails to handle relative paths with pathed cookies correctly, so have to manually absolutize paths
 	*/
 	public function requestFix($method, $url, $post_vars = array(), $files = null){
-		//fixed post to handle relative url paths with 
+		//fixed post to handle relative url paths with
 		$url = Http::absoluteUrl($url);
 		$response = $this->request($method, $url, $post_vars, $files);
 		if($this->follow_redirects && $response->headers['Location']){
-			$response = $this->get(Http::absoluteUrl($response->headers['Location'],$url));
+			$url = Http::absoluteUrl($response->headers['Location'],$url);
+			$response = $this->get($url);
 		}
+		$response->finalUrl = $url;
 		return $response;
 	}
 
@@ -134,18 +136,18 @@ class Curl{
 				$this->error = Debug::toss('Error number:'.curl_errno($this->request).' with text: '.curl_error($this->request), 'CurlException');
 			}
 		}
-		
+
 		if($response->headers['Content-Encoding'] == 'gzip'){
 			if(!function_exists('gzdecode')){
 				function gzdecode($data){
 					$g=tempnam('/tmp','tp_');
 					@file_put_contents($g,$data);
-					ob_start(); 
+					ob_start();
 					readgzfile($g);
 					$d=ob_get_clean();
 					unlink($g);
-					return $d; 
-				} 
+					return $d;
+				}
 			}
 			$response->body = gzdecode($response->body);
 		}elseif($response->headers['Content-Encoding'] == 'deflate'){
@@ -156,7 +158,7 @@ class Curl{
 
 		return $response;
 	}
-	
+
 	protected function setRequestHeaders(){
 		$headers = array();
 		foreach ($this->headers as $key => $value){
@@ -164,7 +166,7 @@ class Curl{
 		}
 		curl_setopt($this->request, CURLOPT_HTTPHEADER, $headers);
 	}
-	
+
 	protected function setRequestOptions($url, $method, $vars, $files = null){
 		$purl = parse_url($url);
 

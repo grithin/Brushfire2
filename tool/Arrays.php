@@ -29,7 +29,7 @@ class Arrays{
 		$array = self::getElement($keys,$array);
 		return isset($array[$lastKey]);
 	}
-	
+
 	/// Gets an element of an arbitrarily deep array using list of keys for levels
 	/**
 	@param	keys array comma separated list of keys to traverse
@@ -71,7 +71,7 @@ class Arrays{
 		}
 		return $array;
 	}
-	
+
 	/// Updates an arbitrarily deep element in an array using list of keys for levels
 	/** Traverses an array based on keys to some depth and then updates that element
 	@param	keys array comma separated list of keys to traverse
@@ -92,8 +92,8 @@ class Arrays{
 		$element = &self::getElementReference($keys,$array,true);
 		$element = &$reference;
 	}
-	
-	
+
+
 	///finds all occurrences of value and replaces them in arbitrarily deep array
 	static function replaceAll($value,$replacement,$array,&$found=false){
 		foreach($array as &$element){
@@ -114,8 +114,8 @@ class Arrays{
 		replaceAllParents('bob','bill',$bob);
 		#	['sue'=>['jill'=>['dave'=>'bill']]]
 		replaceAllParents('bob','bill',$bob,2);
-		#	['sue'=>['jill'=>'bill']];    
-	
+		#	['sue'=>['jill'=>'bill']];
+
 	*/
 	static function replaceAllParents($value,$replacement,$array,$parentDepth=1,&$found=false){
 		foreach($array as &$element){
@@ -138,7 +138,7 @@ class Arrays{
 		unset($element);
 		return $array;
 	}
-	/// takes an array and flattens it to one level using separator to indicate key deepness 
+	/// takes an array and flattens it to one level using separator to indicate key deepness
 	/**
 	@param	array	a deep array to flatten
 	@param	separator	the string used to indicate in the flat array a level of deepenss between key strings
@@ -197,6 +197,20 @@ class Arrays{
 		}
 		return $newA;
 	}
+	///php collapses numbered or number string indexes on merge, this does not
+	static function indexMerge($x,$y){
+		if(is_array($x)){
+			if(is_array($y)){
+				foreach($y as $k=>$v){
+					$x[$k] = $v;
+				}
+				return $x;
+			}else{
+				return $x;	}
+		}else{
+			return $y;	}
+	}
+
 	///merges if two arrays, else returns the existing array.  $y overwrites $x on matching keys
 	static function merge($x,$y){
 		if(is_array($x)){
@@ -365,7 +379,7 @@ class Arrays{
 		}
 		return array();
 	}
-	
+
 	///like the normal implode but ignores empty values
 	static function implode($separator,$array){
 		Arrays::remove($array);
@@ -380,7 +394,7 @@ class Arrays{
 			$extractTo = array();
 		}
 		foreach($keys as $key){
-			if(array_key_exists($key,$extactee) || $forceKeys){ 
+			if(array_key_exists($key,$extactee) || $forceKeys){
 				$extractTo[$key] = $extactee[$key];
 			}
 		}
@@ -390,7 +404,7 @@ class Arrays{
 	/**
 		@param	map	array	[newKey => oldKey]
 		@param	$numberDefault	wherein if the newKey is a number, assume the oldKey is both the oldKey and the newKey
-		
+
 		ex
 		$bob = ['sue'=>'a','bill'=>'b'];
 		Arrays::map(['test'=>'sue','bill'],$bob,$x=null,true);
@@ -413,19 +427,19 @@ class Arrays{
 				}
 			}
 		}
-		
+
 		return $extractTo;
 	}
 	///checks if $subset is a sub set of $set starting at $start
 	/*
-	
+
 		ex 1: returns true
 			$subset = array('sue');
 			$set = array('sue','bill');
 		ex 2: returns false
 			$subset = array('sue','bill','moe');
 			$set = array('sue','bill');
-	
+
 	*/
 	static function isOrderedSubset($subset,$set,$start=0){
 		for($i=0;$i<$start;$i++){
