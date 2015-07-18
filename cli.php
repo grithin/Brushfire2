@@ -22,9 +22,21 @@ if(!class_exists('Control',false)){
 
 	if(!$_ENV['projectFolder']){
 		$includerPath = debug_backtrace()[0]['file'];
-		$_ENV['projectFolder'] = realpath(dirname($includerPath)).'/';	}
+		$_ENV['projectFolder'] = realpath(dirname($includerPath));
+		//phar handling
+		if(!$_ENV['projectFolder']){
+			$_ENV['projectFolder'] = realpath('./');
+		}
+		$_ENV['projectFolder'] .= '/';
+	}
 	if(!$_ENV['systemFolder']){
-		$_ENV['systemFolder'] = realpath(dirname(__FILE__)).'/';	}
+		$_ENV['systemFolder'] = realpath(dirname(__FILE__));
+		if(!$_ENV['systemFolder']){
+			#phar:///pathToPharFile/project.phar:
+			$_ENV['systemFolder'] = __DIR__;
+		}
+
+		$_ENV['systemFolder'] .= '/';	}
 	require_once $_ENV['systemFolder'].'config.php';
 	//to avoid cache collision between cli scripts
 	$_ENV['cache.default'] = ['type'=>'none','connection'=>[]];
