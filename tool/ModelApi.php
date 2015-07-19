@@ -220,7 +220,7 @@ class ModelApi{
 					return true;
 				}elseif($options['type'] == 'create' && !$options['subtype']){
 					//create should not match any records
-					Control::error('{_FIELD_} match(es) an existing record',$fields);
+					Control::error('{_FIELD_} matches an existing record',$fields);
 					return false;	}
 				else {
 					//prefix fields

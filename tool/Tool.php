@@ -42,14 +42,14 @@ class Tool{
 		@param	1	min length
 		@param	2	max length max
 		@param	3	regex pattern
-	
+
 	Regex pattern:  Can evaluate to false (which defaults to alphanumeric).  Should be delimeted.  Defaults to '@[a-z0-9]@i'
-	
+
   ex:
     Tool::randomString(12)
     Tool::randomString(12,'[a-z]')
     Tool::randomString(12,24,'[a-z]')
-  
+
 	@return	random string matching the regex pattern
 	*/
 	static function randomString(){
@@ -74,7 +74,7 @@ class Tool{
 		}
 		return $string;
 	}
-	
+
 	///used for time based synchronization
 	static function then($name=1){
 		if(self::$then[$name]){
@@ -102,7 +102,7 @@ class Tool{
 	@return	a string various words capitalized and some not
 	*/
 	static function capitalize($string,$split='\t _',$fullCaps=null,$excludes=null){
-		$excludes = $excludes ? $excludes : array('to', 'the', 'in', 'at', 'for', 'or', 'and', 'so', 'with', 'if', 'a', 'an', 'of', 
+		$excludes = $excludes ? $excludes : array('to', 'the', 'in', 'at', 'for', 'or', 'and', 'so', 'with', 'if', 'a', 'an', 'of',
 			'to', 'on', 'with', 'by', 'from', 'nor', 'not', 'after', 'when', 'while');
 		$fullCaps = $fullCaps ? $fullCaps : array('cc');
 		$words = preg_split('@['.$split.']+@',$string);
@@ -127,7 +127,7 @@ class Tool{
 			function($matches) use ($separater){return $separater.strtolower($matches[0]);},
 			$string);
 	}
-	
+
 	///turns a string into a lower camel cased string
 	/**
 	@param	string	string to camelCase
@@ -194,14 +194,14 @@ class Tool{
 	static function regexError($regex){
 		$currentErrorReporting = error_reporting();
 		error_reporting($current & ~E_WARNING);
-		
+
 		set_error_handler(array('self','captureRegexError'));
-	
+
 		preg_match($regex,'test');
-		
+
 		error_reporting($currentErrorReporting);
 		restore_error_handler();
-		
+
 		if(self::$regexError){
 			$return = self::$regexError;
 			self::$regexError == null;
@@ -323,7 +323,7 @@ class Tool{
 	using haversine
 	a = (sin(dlat/2))^2 + cos(lat1) * cos(lat2) * (sin(dlon/2))^2
 	d = R * 2 * atan(sqrt(a) / sqrt(1-a))
-	
+
 	//++ getting max lat radian difference approximating 1km {
 	//when lon diff is 0
 	a = (sin(dlat/2))^2
@@ -332,16 +332,16 @@ class Tool{
 	x = atan( sqrt(a)/ sqrt(1-a) )
 	1 = 6371 * 2 * x
 	x = 1/12742
-	
+
 	x = atan( sqrt(a)/ sqrt(1-a) )
 	y = sqrt(a)/sqrt(1-a)
 	x = atan(y)
 	1/12742 = atan(y)
 	tan(1/12742) = y
-	
+
 	y = sqrt(a)/
 		sqrt(1-a)
-	
+
 	y^2 = (+-) a/(1-a)
 	y^2 (1 - a) = a
 	y^2 - y^2 a = a
@@ -349,28 +349,28 @@ class Tool{
 	a = -y^2 / (-y^2 - 1)
 	a = y^2 / (y^2 + 1)
 	a = 6.159207E-9
-	
+
 	a = (sin(dlat/2))^2
 	asin(sqrt(a)) =  = dlat/2
 	dlat = asin(sqrt(a)) * 2
-	
+
 	dlat = asin(sqrt(tan(1/12742)^2 / (tan(1/12742)^2 + 1))) * 2
-	
-	//max lat radian difference approximating 1km 
+
+	//max lat radian difference approximating 1km
 	dlat = 0.00015696123
-	
+
 	//++ }
-	
-	
+
+
 	//++ getting max lon radian difference approximating 1km {
 	//when lat diff is 0
 	a = cos(lat)^2 * (sin(dlon/2))^2
 	6.159207E-9 = cos(lat)^2 * (sin(dlon/2))^2
 	asin(sqrt(6.159207E-9)/cos(lat)) * 2  = dlon
 	asin(0.000078480615/cos(lat)) * 2  = dlon
-	
+
 	@note since latitude determines the size of the circle, lon diff is dependent upon lat, while lat diff is not dependent on lon
-	
+
 	@param	distance	km
 	*/
 	static function latLonRange($lat,$lon,$distance){
@@ -383,9 +383,9 @@ class Tool{
 		Debug::quit($out);
 		#a = (sin(dlat/2))^2 + cos(lat1) * cos(lat2) * (sin(dlon/2))^2
 		*/
-		
-		
-		
+
+
+
 		$latRadians = pi() * $lat/180;
 		$lonRadians = pi() * $lon/180;
 		#asin(0.000078480615/cos(lat)) * 2  = dlon
@@ -394,10 +394,10 @@ class Tool{
 		#$lat1kmDiff = 180 * $km1LatRadDiff/pi();
 		$lat1kmDiff = 0.0089932160261822023;
 		$lon1kmDiff = 180 * $km1LonRadDiff/pi();
-		
+
 		$latDiff = $distance * $lat1kmDiff;
 		$lonDiff = $distance * $lon1kmDiff;
-		
+
 		return [
 			'latMin' => $lat - $latDiff,
 			'latMax' => $lat + $latDiff,
@@ -431,7 +431,7 @@ class Tool{
 				$json = json_encode($x);	}	}
 		if(json_last_error() != JSON_ERROR_NONE){
 			\Debug::toss('JSON encode error: '.json_last_error());	}
-		
+
 		return $json;
 	}
 	///utf encode variably deep array
@@ -444,3 +444,7 @@ class Tool{
 		return $x;
 	}
 }
+
+//turn value into a reference
+function &r($v){
+	return $v;	}

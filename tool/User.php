@@ -43,10 +43,10 @@ class User{
 			Cookie::remove('desiredUrl');
 		}
 
-		\Hook::run('userAction','signin');
+		\Hook::run('userAction',r('signin'));
 	}
 	static function signout(){
-		\Hook::run('userAction','signout');
+		\Hook::run('userAction',r('signout'));
 		session_destroy();
 	}
 	static function timezone(){

@@ -157,7 +157,6 @@ $.eachApply = function(selector,fn){
 //++ }
 
 bf = bf || {}
-bf.tool = function(){};
 
 bf.setCookie = function(name, value, exp){
 	var c = name + "=" +escape( value )+";path=/;";
@@ -1190,8 +1189,15 @@ bf.view.closeButton = function(ele,hide){
 //+	}
 
 
-//++ form stuff {
+//++ forms interacting with the CRUD api, and other form stuff {
 bf.view.form = {}
+/**
+Ex
+	data = bf.view.form.data($('form'))
+	bf.view.form.getCsrf(function(csrf){
+		data._csrfToken = csrf)
+		doPost()		})
+*/
 bf.view.form.getCsrf = function(callback){
 	var suscess = bf.view.form.response.arg({success:function(json){ callback(json.value) }	})
 	$.json({url:'/brushfire/csrf',success:suscess})
@@ -1422,30 +1428,43 @@ bf.view.form.getLine = function(field,value,options){
 	success: see bf.view.form.response,
 	url: url to post to,
 	csrf: whether to add in a csrf token,
+	item: <obj><<item properties to override form content>>
+	form: <element><<the form element>>
+@note	will default to $(this) as form
 @note it is expected that all ajax responses will conform to having a 'status' attribute, and so ajaxFormResponse is used
 */
 bf.view.form.submit = function(options){
-	var form = $(this)
-	bf.view.sm.uninserts({context:form})
+	options = options || {}
 
-	var doPost = function(){
-		var data = {item:bf.view.form.data(form),type:form.attr('data-changeType')}
-		success = bf.view.form.response.arg({context:form,success:options.success})
-		var files = $('input[type="file"]',form)
-		if(files.size()){
-			$.file({success:success,data:data,url:options.url}, files.toArray())
-		}else{
-			$.json({success:success,data:data,url:options.url})
-		}
+	if(!options.form){
+		options.form = $(this)
 	}
+
+	var data = {item:bf.view.form.data(options.form),type:options.form.attr('data-changeType')}
+	if(options.item){
+		bf.obj.shallowMerge(data.item,options.item)
+	}
+
+	bf.view.sm.uninserts({context:options.form})
+
 	if(options.csrf){
 		bf.view.form.getCsrf(function(csrf){
-			form.append($('<input type="hidden" name="_csrfToken"/>').val(csrf))
-			doPost()		})
+			data.item._csrfToken = csrf
+			bf.view.form.post(options.form,data,options)		})
 	}else{
-		doPost()
+		bf.view.form.post(options.form,data,options)
 	}
 	return false;
+}
+///pulls the data and does the post
+bf.view.form.post = function(form,data,options){
+	success = bf.view.form.response.arg({context:form,success:options.success})
+	var files = $('input[type="file"]',form)
+	if(files.size()){
+		$.file({success:success,data:data,url:options.url}, files.toArray())
+	}else{
+		$.json({success:success,data:data,url:options.url})
+	}
 }
 
 ///submit multiple forms using json post (no files)

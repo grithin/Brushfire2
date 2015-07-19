@@ -11,14 +11,19 @@ class DomTools{
 	}
 	///get string of child nodes
 	static function nodeInnerXml($node){
-		$children = $node->childNodes; 
+		$children = $node->childNodes;
 		return self::nodesHtml($children);
     }
     ///in string of either an array of nodes or a nodeList
-    static function nodesHtml($nodes){
+		/**
+		@param	wrap	<string><<if present, will wrap resulting nodes in a node of this string>>
+		*/
+    static function nodesHtml($nodes,$wrap=''){
 		foreach($nodes as $node){
 			$html .= trim(self::nodeHtml($node));
 		}
+		if($wrap){
+			$html =  '<'.$wrap.'>'.$html.'</'.$wrap.'>';	}
 		return $html;
 	}
 	///get string of not html
@@ -40,7 +45,7 @@ class DomTools{
 		$dom = new DOMDocument;
 		@$dom->loadXML($xml);
 		$xpath = new DomXPath($dom);
-		
+
 		$rootNamespace = $dom->lookupNamespaceUri($dom->namespaceURI);
 		if($rootNamespace){
 			if($dom->documentElement->getAttribute('xmlns:d')){
@@ -61,8 +66,8 @@ class DomTools{
 		}
 		return $nonTextNodes;
 	}
-	
-	
+
+
 	///get array of child nodes exluding #text nodes
 	static function childNodes($node){
 		$childNodes = $node->childNodes;
@@ -88,5 +93,43 @@ class DomTools{
 			}
 		}
 		return false;
+	}
+
+	///from an array of nodes, find matchin texts
+	/**
+	@param	nodes	[<<node>>,...]
+	@param	find	{<<key>> : <string><<text to match>>,...}
+	*/
+	static function matchMap($nodes,$find){
+		foreach($columns as $i=>$v){
+			$value = preg_replace('@(^[\s]+)|([\s]+$)@','',strip_tags($v->nodeValue));
+			foreach($find as $key=>$column){
+				$qColumn = preg_quote($column);
+				if(preg_match('@^'.$qColumn.'$@i',$value)){
+					$positions[$key] = $i;
+					//potentially, multiple columns many:one
+					continue;
+				}
+				if(preg_match('@'.$qColumn.'@i',$value)){
+					if(!isset($positions[$key])){
+						$positions[$key] = $i;
+					}
+				}
+			}
+		}
+		return $positions;
+	}
+	///apply matchMap return to array of nodes to get mapped array
+	/**
+	@param	parent	<node><<parent node>>
+	@param	map	<matchMap return>
+	*/
+	static function mapNodes($parent,$map){
+		$columnValues = array();
+		$columns = self::childNodes($row);
+		foreach($map as $key=>$position){
+			$columnValues[$key] = trim($columns[$position]->nodeValue);
+		}
+		return $columnValues;
 	}
 }

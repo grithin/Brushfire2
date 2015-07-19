@@ -26,7 +26,7 @@ class Validate{
 			'mime' => '{_FIELD_} must have one of the following mimes: %s',
 			'notMime' => '{_FIELD_} must not have any of the following mimes: %s',
 //+	}
-//+	More specialized validators{			
+//+	More specialized validators{
 			'phone_area' => 'Please include an area code in {_FIELD_}',
 			'phone_check' => 'Please check {_FIELD_}',
 			'zip' => '{_FIELD_} was malformed',
@@ -168,7 +168,7 @@ class Validate{
 			Debug::toss(self::$errorMessages['timezone'],'InputException');
 		}
 	}
-	
+
 	static function date($value){
 		try{
 			new Time($value);
@@ -205,13 +205,15 @@ class Validate{
 		return true;
 	}
 //+	}
-	static function validateCsrfToken($value){
+	static function csrf($value){
 		$csrfToken = $_SESSION['csrfToken'];
 		unset($_SESSION['csrfToken']);
-		if(!$value){
+		if(!$csrfToken){
+			\Debug::toss('No session CSRF token','InputException');
+		}elseif(!$value){
 			\Debug::toss('Missing CSRF token','InputException');
 		}elseif($value != $csrfToken){
-			\Debug::toss('CSRF token mismatch.  Reload this page and send only one form at a time.','InputException');
+			\Debug::toss('CSRF token mismatch.  Reload this page and send only one form at a time','InputException');
 		}
 	}
 	///matches value against (string)callable return value
@@ -223,7 +225,7 @@ class Validate{
 			Debug::toss('{_FIELD_} does not match','InputException');
 		}
 	}
-	
+
 	static function basicText(&$value){
 		Filter::trim($value);
 		Filter::conditionalNl2Br($value);
@@ -259,19 +261,19 @@ class Validate{
 	static function phone(&$value){
 		Filter::digits($value,'digits');
 		self::filled($value);
-		
+
 		if(strlen($value) == 11 && substr($value,0,1) == 1){
 			$value = substr($value,1);
 		}
 		if(strlen($value) == 7){
 			Debug::toss(self::$errorMessages['phone_area'],'InputException');
 		}
-		
+
 		if(strlen($value) != 10){
 			Debug::toss(self::$errorMessages['phone_check'],'InputException');
 		}
 	}
-	
+
 	static function age($value,$min=null,$max=null){
 		$time = new Time($value);
 		$age = $time->diff(new Time('now'));
@@ -293,7 +295,7 @@ class Validate{
 	static function htmlTagContextIntegrityCallback($match){
 		preg_match('@^[a-z]+@i',$match[2],$tagMatch);
 		$tagName = $tagMatch[0];
-		
+
 		if($match[1] == '<'){
 			//don't count self contained tags
 			if(substr($match[2],-1) != '/'){
@@ -306,9 +308,9 @@ class Validate{
 			}
 		}
 	}
-	
+
 	//++ functions relying on Control:: {
-	
+
 	///check if create/update will collide with existing row using $control->id and $control->in
 	///@note assumes primary control
 	static function checkUniqueKeys($value, $table,$type){
@@ -333,6 +335,6 @@ class Validate{
 			}
 		}
 	}
-	
+
 	//++ }
 }
