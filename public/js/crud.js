@@ -17,7 +17,6 @@ bf.crud = function(options){
 
   this.createOne = function(){
     $('#where').hide()
-    console.log(this.table)
     var form = bf.view.form.model({scope:this.table,type:'createOne',submitText:'Create'})
     var submitOptions = {url:'/model/'+this.table,
       success:function(json){

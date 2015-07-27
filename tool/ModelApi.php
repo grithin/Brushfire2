@@ -107,6 +107,12 @@ class ModelApi{
 	function updateOne($scope,$options=[]){
 		$options['type'] = 'update';
 		return self::upsert($scope,$options);	}
+
+
+	/**
+	@param	options	{
+		possibleFields: <<restricts what fields can be upserted>>	}
+	*/
 	function upsert($scope,$options=[]){
 		if($options['item']){
 			$in = &$options['item'];
@@ -319,6 +325,9 @@ class ModelApi{
 			return array_pop($returns);	}
 
 		Db::update($options['scope'],$upsert,Arrays::extract($options['matchedKeys'][$options['lastMatchedKey']],$options['in']));
+		if($upsert['id']){
+			$options['id'] = $upsert['id'];
+		}
 		\Hook::run('ModelApi::doUpdate:post',$upsert,$options);
 		return $options;
 	}
@@ -564,6 +573,12 @@ class ModelApi{
 		return \Db::query($sql)->rowCount();
 	}
 	/**
+	@param	options	{
+		possibleFields:<<list of possible fields, array or comman separated>>
+		select:<<fields to select>>
+		where:{
+			<field selecter> : <<compared value>>
+			...	}	}
 	@note, options[select] will be extended as needed for where class (to make joins)
 	*/
 	function read($scope,$options=[]){

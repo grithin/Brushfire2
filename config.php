@@ -89,7 +89,9 @@ ini_set('session.gc_divisor', 100);
 //+	Caching {
 ///connection array
 #$_ENV['cache.default'] = ['type'=>'memcache','connection'=>['127.0.0.1','11211'],'prefix'=>$_ENV['httpHost']];
-$_ENV['cache.default'] = ['type'=>'redis','connection'=>['127.0.0.1',6379, 1, NULL, 100],'prefix'=>$_ENV['httpHost'].'.'];
+if(!$_ENV['cache.default']){
+	$_ENV['cache.default'] = ['type'=>'redis','connection'=>['127.0.0.1',6379, 1, NULL, 100],'prefix'=>$_ENV['httpHost'].'.'];
+}
 ///db of cache to connect to, if any
 //$_ENV['cache.db']
 //+ }

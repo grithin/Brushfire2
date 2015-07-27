@@ -87,8 +87,16 @@ class WebData{
 	*/
 	static function aspParseJson($text){
 		#preg_match('@\(@i',$text,$match);
+		$text = self::depackAspResponse($text);
+		return json_decode($text,true);
+	}
+	static function aspParseXml($text){
+		$text = self::depackAspResponse($text);
+		return str_replace('\\"','"',$text);
+	}
+	static function depackAspResponse($text){
 		preg_match('@^.*?\(([\s\S]*)\)\s*$@i',$text,$match);
-		return json_decode($match[1],true);
+		return $match[1];
 	}
 	static $conversionRates = array();
 	static function getConversionRates(){

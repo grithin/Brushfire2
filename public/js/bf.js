@@ -85,6 +85,11 @@ Date.prototype.dst = function() {
 
 
 //++ jquery mods {
+$.fn.hasAttr = function(name) {
+  if (typeof(this.attr(name)) !== typeof(undefined) && this.attr(name) !== false){
+		return true	}
+	return false	}
+
 ///jquery ajax post for json request and response.  the laziness is  strong with this one
 $.json = function(options){
 	var defaults = {contentType:'application/json',dataType:'json',method:'POST'}
@@ -140,7 +145,7 @@ $.file = function(options,fileInputs){
 
 	//xhr.setRequestHeader("X_FILENAME", file.name);
 
-	return deferrer.promise
+	return deferred.promise
 }
 
 
@@ -945,6 +950,15 @@ bf.view.sm = {}
 sets defaults for option attributes:
 	options.context : jquery container for the context of the messages.  Must have a 'data-context' attribute, or function will find parent with such
 	options.messageContainer : jquery container for where to place the messages.  Defaults to first .messageContainer in context, but will go to higher [data-context] if no element found
+
+html data-context and _messageContainer use
+	<form data-context>
+		<div class="_messageContainer">
+		</div>
+	</form>
+
+
+
 */
 bf.view.sm.defaults = function(options){
 	options = options || {}
@@ -956,7 +970,7 @@ bf.view.sm.defaults = function(options){
 
 	if(!options.messageContainer){
 		var parentContext = options.context
-		while(!options.messageContainer){
+		while(!options.messageContainer || !options.messageContainer.size()){
 			options.messageContainer = $('._messageContainer:first',parentContext)
 			if(options.messageContainer.size()){
 				break
@@ -970,7 +984,7 @@ bf.view.sm.defaults = function(options){
 	return options	}
 ///checks if the given element has data-context, else looks in parents
 bf.view.sm.firstContext = function(ele){
-	if(ele.attr('data-context')){
+	if(ele.hasAttr('data-context')){
 		return ele
 	}
 	var context = ele.parents('[data-context]:first')
@@ -1067,23 +1081,37 @@ will attempt to match containers following the pattern '._messageContainer[data-
 		expiry : when to remove the message.  Unix time or time offset
 		closeable : whether message   is closable (adds close button)
 		type : what type of message  it is (error,success,notice,warning)
+	options
+		context
+		type
 
 Allows for overloading:
 	fn(message[string])
-	fn(message[string],type)
+	fn(message[string],type<string>)
+	fn(message[string],options<object>)
 	fn(message[string],type,options)
+	fn(message<object>,options<object>)
+
 */
-bf.view.sm.insert = function(message,options){
+bf.view.sm.insert = function(message){
+	var options = {}
 	if(typeof(message)=='string'){
 		if(arguments.length == 3){
 			options = arguments[2]
 			message = {type:arguments[1],content:arguments[0]}
 		}else if(arguments.length == 2){
-			message = {type:arguments[1],content:arguments[0]}
-			options = false
+			if(typeof(arguments[1]) == 'string'){
+				message = {type:arguments[1],content:arguments[0]}
+				options = false
+			}else{
+				message = {type:arguments[1].type,content:arguments[0]}
+				options = arguments[1]
+			}
 		}else{
 			message = {type:'notice',content:arguments[0]}
 		}
+	}else{
+		options = arguments[1]
 	}
 
 	options = bf.view.sm.defaults(options)
@@ -1334,9 +1362,11 @@ bf.view.form.namedIdField = function(env,rows){
 }
 
 ///fill the inputs in a form with the keyed data provided
-bf.view.form.fillInputs = function(form,values){
+bf.view.form.fillInputs = function(form,values,ignoreFalse){
 	$('[name]:not([type="submit"])',form).each(function(){
-		bf.view.form.fillInput($(this),values[$(this).attr('name')])	})
+		var value = values[$(this).attr('name')]
+		if(value || !ignoreFalse){
+			bf.view.form.fillInput($(this),value)	}	})
 }
 
 bf.view.form.fillInput = function(input,value){
@@ -1431,6 +1461,7 @@ bf.view.form.getLine = function(field,value,options){
 	item: <obj><<item properties to override form content>>
 	form: <element><<the form element>>
 @note	will default to $(this) as form
+@note	the  optins.form will be the sm context
 @note it is expected that all ajax responses will conform to having a 'status' attribute, and so ajaxFormResponse is used
 */
 bf.view.form.submit = function(options){
@@ -1441,6 +1472,9 @@ bf.view.form.submit = function(options){
 	}
 
 	var data = {item:bf.view.form.data(options.form),type:options.form.attr('data-changeType')}
+	if(options.data){
+		bf.obj.shallowMerge(data,options.data)
+	}
 	if(options.item){
 		bf.obj.shallowMerge(data.item,options.item)
 	}

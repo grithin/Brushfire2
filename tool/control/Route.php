@@ -70,14 +70,35 @@ class Route{
 		if(is_file($_ENV['controlFolder'].'control.php')){
 			include($_ENV['controlFolder'].'control.php');
 		}
-		while(self::$unparsedTokens){
+
+		self::rawLoad(self::$unparsedTokens,self::$parsedTokens,$incVars,self::$currentToken);
+//+	}
+	}
+
+	///load a control path
+	/**
+	@param	start	<<will skip controls prior to start>>
+	*/
+	static function load($target,$start=''){
+		$parsedTokens = [];
+		$unparsedTokens = explode('/',$target);
+		if($start){
+			$parsedTokens = explode('/',$start);
+			$unparsedTokens = array_diff($unparsedTokens,$parsedTokens);
+		}
+		self::rawLoad($unparsedTokens,$parsedTokens);
+	}
+
+	///used internally for pointing at referenced token variables for use in control pages
+	static function rawLoad(&$unparsedTokens,&$parsedTokens,&$incVars=null,&$currentToken=null){
+		while($unparsedTokens){
 			$loaded = false;
-			self::$currentToken = array_shift(self::$unparsedTokens);
-			if(self::$currentToken){//ignore blank tokens
-				self::$parsedTokens[] = self::$currentToken;
+			$currentToken = array_shift($unparsedTokens);
+			if($currentToken){//ignore blank tokens
+				$parsedTokens[] = $currentToken;
 
 				//++ load the control {
-				$path = $_ENV['controlFolder'].implode('/',self::$parsedTokens);
+				$path = $_ENV['controlFolder'].implode('/',$parsedTokens);
 				//if named file, load, otherwise load generic control in directory
 				if(is_file($path.'.php')){
 					$loaded = \Files::inc($path.'.php',null,$incVars);
@@ -87,7 +108,7 @@ class Route{
 				//++ }
 			}
 			//not loaded and was last token, page not found
-			if($loaded === false && !self::$unparsedTokens){
+			if($loaded === false && !$unparsedTokens){
 				if(!$_ENV['inScript']){
 					if(\Control::$ajax){
 						\Control::error('Page not found');
@@ -102,12 +123,12 @@ class Route{
 					\Config::loadUserFiles($_ENV['pageNotFound'],'control',null,$incVars);
 					exit;
 				}else{
-					Debug::toss('Request handler encountered unresolvable token at control level.'."\nCurrent token: ".self::$currentToken."\nTokens parsed".print_r(self::$parsedTokens,true));
+					Debug::toss('Request handler encountered unresolvable token at control level.'."\nCurrent token: ".$currentToken."\nTokens parsed".print_r($parsedTokens,true));
 				}
 			}
 		}
-//+	}
 	}
+
 	///find the most specific tool
 	private static function addLocalTool($base){
 		$tokens = self::$tokens;

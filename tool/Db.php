@@ -129,7 +129,7 @@ array(
 	protected function row(){
 		$sql = $this->getOverloadedSql(1,func_get_args());
 		#function implies only 1 retured row
-		if(!preg_match('@[\s]*show@i',$sql)){
+		if(!preg_match('@[\s]*show|limit\s*[0-9]+(,\s*[0-9]+)?@i',$sql)){
 			$sql .= "\nLIMIT 1";
 		}
 		if($res = $this->query($sql)){
@@ -661,4 +661,13 @@ array(
 		return $this->indices[$table];
 	}
 //+ }
+	protected function startTransaction(){
+		$this->under->beginTransaction();
+	}
+	protected function commitTransaction(){
+		$this->under->commit();
+	}
+	protected function rollbackTransaction(){
+		$this->under->rollBack();
+	}
 }
