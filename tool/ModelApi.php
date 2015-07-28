@@ -150,7 +150,7 @@ class ModelApi{
 		}
 		//++ }
 
-		//++ allow resolution for up to one link deep {
+		//++ allow resolution of linked fields for up to one link deep {
 		$possibleListedFields = self::possibleFields($scope,2);
 		$listedFields = array_intersect(array_keys($in), $possibleListedFields);
 		$possibleFields = self::possibleFields($scope,1);
@@ -199,20 +199,8 @@ class ModelApi{
 		//++ }
 
 		//++ check for unique row fields in the input {
-		foreach(\Control::$model[$scope]['keys'] as $key=>$keyFields){
-			$notKey = false;
-			foreach($keyFields as $field){
-				$keyFieldList[] = $field;
-				if(!isset($in[$field])){
-					$notKey = true;
-					break;
-				}
-			}
-			if(!$notKey){
-				$matchedKeys[] = $keyFields;
-			}
-		}
-
+		$matchedKeys = Control::$model->matchedKeys($scope,$in);
+		
 		//++ }
 		//++ check matched unique rows against database {
 		if($matchedKeys){

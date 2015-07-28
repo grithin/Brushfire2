@@ -15,11 +15,12 @@ bf.crud = function(options){
     return $('#where [name="type"]').val(value)
   }
 
-  this.createOne = function(){
+  this.createOne = function(options){
+    options = options || {}
     $('#where').hide()
     var form = bf.view.form.model({scope:this.table,type:'createOne',submitText:'Create'})
     var submitOptions = {url:'/model/'+this.table,
-      success:function(json){
+      success: options.success || function(json){
         bf.view.sm.insert({type:'success',content:'Created with id '+json.value})}}
     form.submit(bf.view.form.submit.arg(submitOptions))
     this.content.append(form)
@@ -80,7 +81,6 @@ bf.crud = function(options){
       this.setType(newType)
     }
     var type = this.getType()
-
     this.content.empty()
     if(type == 'createOne'){
       return this.createOne()
@@ -91,7 +91,7 @@ bf.crud = function(options){
     if(!where){
       where = {}
     }else{
-      where = JSON.parse(where) }
+      where = eval('r = '+where) }
 
     this[type](where)
   }
@@ -115,4 +115,26 @@ bf.crud = function(options){
         $('#crudHeader').append($('<a href="?table='+key+'">'+key+'</a>'))	}  }
     $('#crudHeader a:contains("'+this.table+'")').css({backgroundColor:'rgba(82, 206, 149,.5)'})
   }.bind(this)).catch(bf.logError)
+}
+
+summarize = function(rows){
+  summary = {counts:{}}
+  var row
+  for(var i in rows){
+    row = rows[i]
+    for(var k in row){
+      if($.isNumeric(row[k])){
+
+      }else{
+        if(!summary.counts.k){
+          summary.counts.k = [[row[k],1]]
+        }else{
+          for(var k2 in summary.counts.k){
+
+          }
+        }
+
+      }
+    }
+  }
 }

@@ -5,7 +5,7 @@
 <div id="crudHeader" class="row"></div>
 
 <div id="where" class="row">
-	Where <input type="text" name="where"/>
+	Where <textarea name="where" rows="5"/></textarea>
 	Type
 	<select name="type">
 		<option value="readOne">readOne</option>

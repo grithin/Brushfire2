@@ -1,10 +1,10 @@
 <?
 ///Used to keep track of inclusions and to get better errors on failed requires
-/**	
+/**
 	@note	For this case, since phpe doesn't like it when you use "include" or "require" for method names, I have abbreviated the names.
 */
 class Files{
-	
+
 	static private $included;///<an array of included files along with other arguments
 	static private $currentInclude;///<internal use
 	///used to factor out common functionality
@@ -36,9 +36,9 @@ class Files{
 			if($_vars){
 				extract($_vars,EXTR_SKIP);#don't overwrite existing
 			}
-			
+
 			include($_file);
-			
+
 			if($_extract){
 				foreach($_extract as $_var){
 					$_return[$_var] = $$_var;
@@ -69,9 +69,9 @@ class Files{
 			if($_vars){
 				extract($_vars,EXTR_SKIP);#don't overwrite existing
 			}
-			
+
 			include_once($_file);
-			
+
 			if($_extract){
 				foreach($_extract as $_var){
 					$_return[$_var] = $$_var;
@@ -102,9 +102,9 @@ class Files{
 			if($_vars){
 				extract($_vars,EXTR_SKIP);#don't overwrite existing
 			}
-			
+
 			include($_file);
-			
+
 			if($_extract){
 				foreach($_extract as $_var){
 					$_return[$_var] = $$_var;
@@ -135,9 +135,9 @@ class Files{
 			if($_vars){
 				extract($_vars,EXTR_SKIP);#don't overwrite existing
 			}
-			
+
 			include_once($_file);
-			
+
 			if($_extract){
 				foreach($_extract as $_var){
 					$_return[$_var] = $$_var;
@@ -163,7 +163,11 @@ class Files{
 	}
 	///prefix in case desire to use relative path or absolute path
 	static function fileList($dir,$prefix='',$filterFn=null){
-		$realPath = realpath($dir).'/';
+		$realPath = realpath($dir);
+		if(!$realPath){
+			Debug::toss('No such directory');
+		}
+		$realPath .= '/';
 		$files = array();
 		foreach(scandir($realPath) as $v){
 			if($v != '.' && $v != '..'){
@@ -183,7 +187,7 @@ class Files{
 		$finfo = finfo_open(FILEINFO_MIME_TYPE);
 		$mime = finfo_file($finfo, $path);
 		finfo_close($finfo);
-		
+
 		/* file -ib command does not determine what type of text a text file is.  So, use the type that the browser was expecting*/
 		if($_SERVER['HTTP_ACCEPT'] && substr($mime,0,5) == 'text/'){
 			$mime = array_shift(explode(',',$_SERVER['HTTP_ACCEPT']));

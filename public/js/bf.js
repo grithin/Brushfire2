@@ -1311,7 +1311,7 @@ bf.view.form.model = function(options){
 			line.attr('data-specialLinkFt',field.nameLink.ft)
 			loadData.push({table:field.nameLink.ft,
 				nullable:field.nullable,
-				default: field.default,
+				value: field.default,
 				field:field.name.relative,
 				context:form})
 		}
@@ -1340,32 +1340,54 @@ bf.view.form.model = function(options){
 }
 ///swap out a text fields with a select field for named ids
 bf.view.form.namedIdField = function(env,rows){
-	var select = $('<select></select>')
-	var i;
-	for(i in rows){
-		row = rows[i]
-		select.append($('<option value="'+row.id+'"></option>').text(row.name))
-	}
-
-	if(env.default){
-		select.val(env.default)
-	}else if(env.nullable){
-		select.append($('<option value="">Default</option>'))
-	}
-
+	var select = bf.view.form.fillSelect(env,rows)
 	var existing = $('[name="'+env.field+'"]',env.context)
 	attributes = existing.get(0).attributes
-	for(i in attributes){
+	for(var i in attributes){
 		select.attr(attributes[i].nodeName,attributes[i].nodeValue)
 	}
 	existing.replaceWith(select)
 }
 
+/**
+@param	env	{
+	nullable : <boolean or string of the option text>
+	value : <value to set select to>
+	select : <select element to use, will make one if not provided> }
+
+@return <select element|t:jquery el>
+*/
+bf.view.form.fillSelect = function(env,rows){
+	var select = env.select || $('<select></select>')
+	var i;
+	for(i in rows){
+		row = rows[i]
+		select.append($('<option value="'+row.id+'"></option>').text(row.name))
+	}
+	if(env.nullable){
+		if(typeof(env.nullable) == typeof('')){
+			select.prepend($('<option value=""></option>').text(env.nullable))
+		}else{
+			select.prepend($('<option value="">None Selected</option>'))	}
+		select.val('')
+	}
+	if(env.value){
+		select.val(env.value)
+	}
+
+	if(env.value){
+		select.val(value)
+	}
+	return select
+}
+
+
 ///fill the inputs in a form with the keyed data provided
-bf.view.form.fillInputs = function(form,values,ignoreFalse){
+bf.view.form.fillInputs = function(form,values,options){
+	options = options || {}
 	$('[name]:not([type="submit"])',form).each(function(){
 		var value = values[$(this).attr('name')]
-		if(value || !ignoreFalse){
+		if(value || !options.ignoreFalse){
 			bf.view.form.fillInput($(this),value)	}	})
 }
 
