@@ -25,11 +25,7 @@ $bodyClasses = implode(' ',(array)View::$common['bodyClasses']);
 
 		<script type="text/javascript">bf={}; bf.json = <?=View::getStdJson()?>;</script>
 
-		<script type="text/javascript" src="//common.deemit.com/js/jquery.min.js"></script>
-		<script type="text/javascript" src="//common.deemit.com/js/jquery-ui.min.js"></script>
-		<script type="text/javascript" src="//common.deemit.com/js/q.js"></script>
-		<? $systemJsBase = '/'.$_ENV['urlSystemFileToken'].'/js/';?>
-		<script type="text/javascript" src="<?=$systemJsBase?>bf.js"></script>
+		<? View::frameworkJs(); ?>
 		<?=View::getTopJs(array('modDate'=>View::$common['resourceModDate']))?>
 	</head>
 

@@ -118,6 +118,7 @@ $_ENV['composerFolder'] = $_ENV['projectFolder'].'vendor/';
 //+	Display related config {
 ///used for @name like shortcuts in View::get template array.  See example in system/view/aliases.php
 $_ENV['view.aliasesFiles'] = [$_ENV['templateFolder'].'brushfire/aliases.php',$_ENV['templateFolder'].'aliases.php'];
+$_ENV['view.staticServer'] = '//common.deemit.com/';
 //+	}
 
 //+	CRUD related config {

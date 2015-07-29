@@ -2,6 +2,11 @@
 //globalThis, used to capture global context.  "this" keyword refers the object the function is a method of (in this case, the global context object)
 gThis = (function(){return this;})();
 
+///make a clone of object and log to console (clone so it doesn't change later)
+log = function(value){
+	console.log(_.clone(value))
+}
+
 //+	compatibility {
 //bind Introduced in JavaScript 1.8.5
 //see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind
@@ -159,6 +164,13 @@ $.eachApply = function(selector,fn){
 }
 //++ }
 
+//Q mods
+///push errors out with `done`, but return the promise
+Q.next = function next(promise){
+	promise.done()
+	return promise
+}
+
 //++ }
 
 bf = bf || {}
@@ -184,28 +196,9 @@ bf.readCookie = function(name) {
 }
 
 bf.arrays = {}
-///check if value is in an array
-bf.arrays.vInA = function(v,a){
-	var i;
-	for(i in a){
-		if(a[i] == v){
-			return true;	}	}
-	return false;	}
-
-///remove items matching v from array a
-/**
-@param	v	value to remove (matches on ==)
-@param	a	array to affect
-*/
-bf.arrays.rmV = function(v,a){
-	var i
-	for(i in a){
-		if(a[i] == v){
-			unset(a[i])	}	}	}
-
 ///Add, but only if unique
 bf.arrays.addUnique = function(v,a){
-	if(!bf.arrays.vInA(v,a)){
+	if(_.indexOf(a,v) === -1){
 		a[a.length] = v;	}	}
 ///get the first available key in a sequential array (where potentially some have been deteted
 bf.arrays.firstAvailableKey = function(a){
@@ -237,7 +230,99 @@ bf.arrays.count = function(a){
 		count += 1;	}
 	return count;	}
 
+
+	///take an array of objects and compile them into an object of arrays
+	/**
+	@param  rows  [{<key>:<value>},...]
+	@param  groupOn <key|f:optional>
+	@param  groupOn < fn(row) -> <t:string> >
+	@example
+	  fn(rows)
+	  fn(rows,'in')
+	  fn(rows,function(row){
+	    console.log('bob')
+	    return row.in.substr(0,10)  })
+
+	*/
+bf.arrays.compile = function(rows,groupOn){
+  var k,i,value
+  //determine information about columns
+  keys = {}
+  if(rows && rows[0]){
+    for(k in rows[0]){
+      keys[k] = {}
+      value = rows[0][k]
+      if($.isNumeric(value)){
+        keys[k].type = 'numeric'
+      }else{
+        keys[k].type = typeof(value)
+      }
+    }
+  }
+
+  var row, groupOnKey, target, flat = []
+  for(i in rows){
+    row = rows[i]
+    if(groupOn){
+      if(typeof(groupOn) == 'string'){
+        groupOnKey = row[groupOn]
+      }else{
+        groupOnKey = groupOn(row) }
+      if(!flat[groupOnKey]){
+        flat[groupOnKey] = {} }
+
+      target = flat[groupOnKey]
+    }else{
+      target = flat
+    }
+    for(k in row){
+      if(!target[k]){
+        target[k] = []
+      }
+      target[k].push(row[k])
+    }
+  }
+	return flat
+}
+bf.arrays.summarise = function(rows,groupOn){
+	return bf.obj.summarise(bf.arrays.compile(rows,groupOn),groupOn)
+}
+bf.arrays.summary = function(column){
+	if($.isNumeric(column[0])){
+		return {
+			mean:d3.mean(column),
+			max:d3.max(column),
+			min:d3.min(column),
+			sum:d3.sum(column),
+			deviation:d3.deviation(column),
+		}
+	}
+	return {count: d3.map(column, function(value) { return value; }).size() }
+}
+
 bf.obj = {};
+///get varius statistics about array data
+/**
+	@example
+		var compiled bf.arrays.compile(obj,'key')
+		var summary = bf.obj.summarise(compiled,true)
+*/
+bf.obj.summarise = function(obj,grouped){
+	var k, k2, summary = {}
+	if(grouped){
+    for(k in obj){
+      summary[k] = {}
+      for(k2 in obj[k]){
+        summary[k][k2] = bf.arrays.summary(obj[k][k2])
+      }
+    }
+  }else{
+    for(k in obj){
+      summary[k] = bf.arrays.summary(obj[k])
+    }
+  }
+	return summary
+}
 ///set arbitrarily deep path to value use php form input semantics
 /**
 ex
@@ -252,22 +337,6 @@ bf.obj.setValue = function(name,value,obj){
 		//since objs are moved by reference, this obj attribute of parent obj still points to parent attribute obj
 		current = current[nameParts[i]]	}
 	current[nameParts[nameParts.length - 1]] = value	}
-
-/**
-@param	target	object to merge into
-variable number of additional parameters are objects to merge into target (over target properties)
-@note, b/c this is shallow, does not make a copy of any properties that are objectd
-@return	target object
-*/
-bf.obj.shallowMerge = function(target){
-	var key
-	for(var i = 0; i < arguments.length; i++){
-		for(key in arguments[i]){
-			target[key] = arguments[i][key]
-		}
-	}
-	return target
-}
 
 //+	url related functions {
 
@@ -447,39 +516,18 @@ bf.toInt = function(s){
 bf.math = {};
 ///round with some precision
 bf.math.round = function(num, precision){
-	var divider = Number(bf.str.pad(1,precision+1,'0','right'))
+	var divider = Number(_.pad(1,precision+1,'0','right'))
 	return Math.round(num * divider) / divider;	}
 ///will render string according to php rules
+/**
+@note	no apparent alternative in underscore or my using String
+*/
 bf.str = function(str){
 	if(typeof(str) == 'number'){
 		return str+'';	}
 	if(!str){
 		return '';	}
 	return str;	}
-///pad a string
-bf.str.pad = function(str,len,padChar,type){
-	str = String(str);
-	if(!padChar){
-		padChar = '0';	}
-	if(!type){
-		type = 'left';	}
-	if(type == 'left'){
-		while (str.length < len){
-			str = padChar + str;	}
-	}else{
-		while (str.length < len){
-			str = str + padChar;	}	}
-	return str;	}
-
-///set words to upper case
-bf.str.ucwords = function(string){
-	if(string){
-		string = string.split(' ');
-		var newString = Array();
-		var i = 0;
-		$.each(string,function(){
-			newString[newString.length] = this.substr(0,1).toUpperCase()+this.substr(1,this.length)	});
-		return newString.join(' ');	}	}
 
 ///set first charracter to uppercase
 bf.str.capitalize = function(string){
@@ -597,6 +645,7 @@ bf.loadData = function(table,apiOptions,options){
 			bf.modelData[hash] = json.value
 			resolve(bf.modelData[hash]) 	}}
 		$.json(options)	})
+
 	return bf.modelDataPromises[hash]
 }
 
@@ -616,7 +665,7 @@ bf.getModelField = function(name,modelScope){
 	}
 	var field = bf.model[parsedName.scope].columns[parsedName.relative] || {}
 	field = JSON.parse(JSON.stringify(field))
-	field.name = bf.obj.shallowMerge(parsedName, field.name || {});//copy existing field.name attributes over parsedName and put into field.name
+	field.name = _.extend(parsedName, field.name || {});//copy existing field.name attributes over parsedName and put into field.name
 
 	//handle default special naming for out of scope special fields
 	if(field.name.scope != modelScope){
@@ -1323,7 +1372,7 @@ bf.view.form.model = function(options){
 		for(var i in  loadData){
 			var callback = bf.view.form.namedIdField.arg(loadData[i])
 			var loadOptions = {type:'readMany',sort:'+name',select:['id','name']}
-			bf.loadData(loadData[i].table,loadOptions).then(callback)
+			bf.loadData(loadData[i].table,loadOptions).then(callback).done()
 		}
 	}
 
@@ -1495,10 +1544,10 @@ bf.view.form.submit = function(options){
 
 	var data = {item:bf.view.form.data(options.form),type:options.form.attr('data-changeType')}
 	if(options.data){
-		bf.obj.shallowMerge(data,options.data)
+		_.extend(data,options.data)
 	}
 	if(options.item){
-		bf.obj.shallowMerge(data.item,options.item)
+		_.extend(data.item,options.item)
 	}
 
 	bf.view.sm.uninserts({context:options.form})
@@ -1551,7 +1600,7 @@ bf.view.form.response = function(options,json){
 		if(typeof(success) == 'object'){
 			bf.view.sm.insertsWithOffsets(options.success,options.context)
 		}else if(typeof(options.success) == 'function'){
-			options.success(json)
+			options.success(json,options)
 		}else{
 			bf.view.sm.insert({type:'success',content:options.success},{context:options.context})
 		}

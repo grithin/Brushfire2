@@ -287,9 +287,22 @@ array(
 
 		return $tree;
 	}
+/*
+	<script type="text/javascript" src="//common.deemit.com/js/underscore-min.js"></script>
+	<script type="text/javascript" src="//common.deemit.com/js/underscore.string.min.js"></script>
 
+	<script type="text/javascript" src="//common.deemit.com/js/jquery.min.js"></script>
+	<script type="text/javascript" src="//common.deemit.com/js/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="//common.deemit.com/js/q.js"></script>
+	<? $systemJsBase = '/'.$_ENV['urlSystemFileToken'].'/js/';?>
+	<script type="text/javascript" src="<?=$systemJsBase?>bf.js"></script>
+*/
 //+	css & js resource handling {
-
+	static function frameworkJs(){
+		$paths = array_map(function($path){return $_ENV['view.staticServer'].$path;},['js/underscore-min.js','js/underscore.string.min.js','js/jquery.min.js','js/jquery-ui.min.js','js/q.js']);
+		$paths[] = '/'.$_ENV['urlSystemFileToken'].'/js/bf.js';
+		self::addTags('-topJs',$paths);
+	}
 	///page css
 	static $css = array();
 	///page css put at the end after self::$css

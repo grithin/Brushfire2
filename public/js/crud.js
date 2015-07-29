@@ -46,9 +46,9 @@ bf.crud = function(options){
     return
   }
   this.readMany = function(where){
-    var loadOptions = {type:'readMany',where:where,per:20,page:0}
+    var loadOptions = {type:'readMany',where:where,per:50,page:0}
     var that = this
-    return bf.loadData(this.table,loadOptions,{noCache:true}).then(function(json){
+    return Q.next(bf.loadData(this.table,loadOptions,{noCache:true}).then(function(json){
       keyHandlers = {id:function(value,key,callback){
           value = '<span class="ln" data-id="'+value+'">'+value+'</span>'
           return callback(value,key,'html')
@@ -56,23 +56,31 @@ bf.crud = function(options){
           var ele = callback(value,key,'html')
           ele.css({display:'block',float:'none'})
           return ele	}	}
+      /*
       that.content.append(bf.view.items.multi(json.rows,bf.view.items.factoryShortField(),keyHandlers))
       that.content.delegate('[data-id]','click',function(){
         var id = $(this).attr('data-id')
         that.setWhere('{"id":'+id+'}')
         that.updateType('updateOne')	})
+      */
 
       json.info.url = '/model/'+that.table
       json.info.handlers = {dataHandler: function(rows){
-        that.content.empty().append(bf.view.items.multi(rows,shortFieldHandler(),keyHandlers)); }}
+        that.content.empty()
+        that.content.append(bf.view.items.multi(rows,bf.view.items.factoryShortField(),keyHandlers)); }}
       bf.view.ps.start(json.info)
+      json.info.handlers.dataHandler(json.rows)
+      return json
 
-        }).catch(bf.logError)
+    }))
   }
   this.readOne = function(where){
     var loadOptions = {type:'readOne',where:where}
-    return bf.loadData(this.table,loadOptions,{noCache:true}).then(function(item){
-      this.content.append($('<pre></pre>').text(JSON.stringify(item,null,1)))	}.bind(this))
+    var promise = bf.loadData(this.table,loadOptions,{noCache:true}).then(function(item){
+      this.content.append($('<pre></pre>').text(JSON.stringify(item,null,1)))
+      return item }.bind(this))
+    promise.done()
+    return promise
   }
 
 
@@ -83,6 +91,7 @@ bf.crud = function(options){
     var type = this.getType()
     this.content.empty()
     if(type == 'createOne'){
+      //history.pushState({type:type},'CRUD UPDATE',bf.url.appends({type:type},null,true))
       return this.createOne()
     }
 
@@ -93,7 +102,9 @@ bf.crud = function(options){
     }else{
       where = eval('r = '+where) }
 
-    this[type](where)
+    history.pushState({type:type,where:where},'CRUD Page',bf.url.appends({type:type,where:JSON.stringify(where)},null,true))
+
+    return {type:type,where:where,return:this[type](where)}
   }
 
   //handle defaults,  get model data
@@ -115,26 +126,4 @@ bf.crud = function(options){
         $('#crudHeader').append($('<a href="?table='+key+'">'+key+'</a>'))	}  }
     $('#crudHeader a:contains("'+this.table+'")').css({backgroundColor:'rgba(82, 206, 149,.5)'})
   }.bind(this)).catch(bf.logError)
-}
-
-summarize = function(rows){
-  summary = {counts:{}}
-  var row
-  for(var i in rows){
-    row = rows[i]
-    for(var k in row){
-      if($.isNumeric(row[k])){
-
-      }else{
-        if(!summary.counts.k){
-          summary.counts.k = [[row[k],1]]
-        }else{
-          for(var k2 in summary.counts.k){
-
-          }
-        }
-
-      }
-    }
-  }
 }
